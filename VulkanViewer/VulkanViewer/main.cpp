@@ -147,7 +147,7 @@ private:
 
 #pragma endregion
 
-class HelloTriangleApplication {
+class VulkanInitializer {
 public:
 	void run() {
 		initWindow();
@@ -185,7 +185,7 @@ private:
 	VDeleter<VkSemaphore> imageAvailableSemaphore{ device, vkDestroySemaphore };//signal that an image has been acquired and is ready for rendering
 	VDeleter<VkSemaphore> renderFinishedSemaphore{ device, vkDestroySemaphore };//signal that rendering has finished and presentation can happen
 
-																				///<summary>Initialize GLFW and create window</summary>
+	///<summary>Initialize GLFW and create window</summary>
 	void initWindow() {
 		glfwInit();
 
@@ -981,7 +981,7 @@ private:
 };
 
 int main() {
-	HelloTriangleApplication app;
+	VulkanInitializer app;
 
 	try {
 		app.run();
