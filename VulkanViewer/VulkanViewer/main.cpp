@@ -8,20 +8,10 @@
 #include <vector>
 #include <cstring>
 #include <set>
+#include <glm/glm.hpp>
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
-
-//List of validation layers to enable
-const std::vector<const char*> validationLayers = { "VK_LAYER_LUNARG_standard_validation" };
-//List of swapchain device extensions to enable
-const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-
-#ifdef NDEBUG
-const bool enableValidationLayers = false;
-#else
-const bool enableValidationLayers = true;
-#endif
 
 struct QueueFamilyIndices {
 	int graphicsFamily = -1;
@@ -37,6 +27,28 @@ struct SwapChainSupportDetails {
 	std::vector<VkSurfaceFormatKHR> formats;
 	std::vector<VkPresentModeKHR> presentModes;
 };
+
+struct Vertex {
+	glm::vec2 pos;
+	glm::vec3 color;
+};
+
+//List of validation layers to enable
+const std::vector<const char*> validationLayers = { "VK_LAYER_LUNARG_standard_validation" };
+//List of swapchain device extensions to enable
+const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+//Array of vertex data for vertex shader
+const std::vector<Vertex> vertices = {
+	{{0.0f, -0.5},{1.0f, 0.0f, 0.0f}},
+	{{0.5f, 0.5f},{0.0f, 1.0f, 0.0f}},
+	{{-0.5f, 0.5f},{0.0f, 0.0f, 1.0f}}
+};
+
+#ifdef NDEBUG
+const bool enableValidationLayers = false;
+#else
+const bool enableValidationLayers = true;
+#endif
 
 VkResult CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback) {
 	auto func = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
