@@ -219,6 +219,8 @@ private:
 	VDeleter<VkSemaphore> imageAvailableSemaphore{ device, vkDestroySemaphore };//signal that an image has been acquired and is ready for rendering
 	VDeleter<VkSemaphore> renderFinishedSemaphore{ device, vkDestroySemaphore };//signal that rendering has finished and presentation can happen
 
+	VDeleter<VkBuffer> vertexBuffer{ device, vkDestroyBuffer };
+
 	///<summary>Initialize GLFW and create window</summary>
 	void initWindow() {
 		glfwInit();
@@ -243,6 +245,7 @@ private:
 		createGraphicsPipeline();
 		createFramebuffers();
 		createCommandPool();
+		createVertexBuffer();
 		createCommandBuffers();
 		createSemaphores();
 	}
@@ -902,6 +905,21 @@ private:
 
 		if (vkCreateCommandPool(device, &poolInfo, nullptr, commandPool.replace()) != VK_SUCCESS)
 			throw std::runtime_error("failed to create command pool!");
+	}
+
+#pragma endregion
+
+#pragma region Vertex buffer
+
+	void createVertexBuffer() {
+		VkBufferCreateInfo bufferInfo = {};
+		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bufferInfo.size = sizeof(vertices[0]) * vertices.size();
+		bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+		if (vkCreateBuffer(device, &bufferInfo, nullptr, vertexBuffer.replace()) != VK_SUCCESS)
+			throw std::runtime_error("failed to create vertex buffer!");
 	}
 
 #pragma endregion
