@@ -245,6 +245,7 @@ private:
 	VDeleter<VkDeviceMemory> uniformBufferMemory{ device, vkFreeMemory };
 
 	VDeleter<VkDescriptorPool> descriptorPool{ device, vkDestroyDescriptorPool };
+	VkDescriptorSet descriptorSet;
 
 	///<summary>Initialize GLFW and create window</summary>
 	void initWindow() {
@@ -275,6 +276,7 @@ private:
 		createIndexBuffer();
 		createUniformBuffer();
 		createDescriptorPool();
+		createDescriptorSet();
 		createCommandBuffers();
 		createSemaphores();
 	}
@@ -1101,6 +1103,43 @@ private:
 
 		if (vkCreateDescriptorPool(device, &poolInfo, nullptr, descriptorPool.replace()) != VK_SUCCESS)
 			throw std::runtime_error("failed to create descriptor pool!");
+	}
+
+#pragma endregion
+
+#pragma region Descriptor Set
+
+	void createDescriptorSet() {
+		// Specify the descriptor pool to allocate from, the number of descriptor sets to allocate, and the descriptor layout to base them on
+		VkDescriptorSetLayout layouts[] = { descriptorSetLayout };
+		VkDescriptorSetAllocateInfo allocInfo = {};
+		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		allocInfo.descriptorPool = descriptorPool;
+		allocInfo.descriptorSetCount = 1;
+		allocInfo.pSetLayouts = layouts;
+
+		//Allocate one descriptor set with one uniform buffer descriptor.
+		if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet) != VK_SUCCESS)
+			throw std::runtime_error("failed to allocate descriptor set!");
+
+		// This structure specifies the buffer and the region within it that contains the data for the descriptor
+		VkDescriptorBufferInfo bufferInfo = {};
+		bufferInfo.buffer = uniformBuffer;
+		bufferInfo.offset = 0;
+		bufferInfo.range = sizeof(UniformBufferObject);
+
+		VkWriteDescriptorSet descriptorWrite = {};
+		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet = descriptorSet;
+		descriptorWrite.dstBinding = 0;
+		descriptorWrite.dstArrayElement = 0;
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorWrite.descriptorCount = 1;
+		descriptorWrite.pBufferInfo = &bufferInfo;
+		descriptorWrite.pImageInfo = nullptr; // Optional
+		descriptorWrite.pTexelBufferView = nullptr; // Optional
+
+		vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
 	}
 
 #pragma endregion
