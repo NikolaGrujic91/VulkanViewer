@@ -1,5 +1,7 @@
 #define GLFW_INCLUDE_VULKAN
 #define GLM_FORCE_RADIANS
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <stdexcept>
@@ -272,6 +274,7 @@ private:
 		createGraphicsPipeline();
 		createFramebuffers();
 		createCommandPool();
+		createTextureImage();
 		createVertexBuffer();
 		createIndexBuffer();
 		createUniformBuffer();
@@ -959,6 +962,21 @@ private:
 
 		if (vkCreateCommandPool(device, &poolInfo, nullptr, commandPool.replace()) != VK_SUCCESS)
 			throw std::runtime_error("failed to create command pool!");
+	}
+
+#pragma endregion
+
+#pragma region Texture Image
+
+	// Loading image with library
+	void createTextureImage() {	
+		int texWidth, texHeight, texChannels;
+		// The stbi_load function takes the file path, width, height and actual number of channels in the image, STBI_rgb_alpha value forces the image to be loaded with an alpha channel
+		stbi_uc* pixels = stbi_load("textures/texture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+		VkDeviceSize imageSize = texWidth * texHeight * 4;
+
+		if (!pixels)
+			throw std::runtime_error("failed to load texture image!");
 	}
 
 #pragma endregion
