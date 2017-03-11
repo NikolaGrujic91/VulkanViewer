@@ -1082,6 +1082,30 @@ private:
 		endSingleTimeCommands(commandBuffer);
 	}
 
+	void copyImage(VkImage srcImage, VkImage dstImage, uint32_t width, uint32_t height) {
+		VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+		// Specify which part of the image needs to be copied to which part of the other image.
+		VkImageSubresourceLayers subResource = {};
+		subResource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		subResource.baseArrayLayer = 0;
+		subResource.mipLevel = 0;
+		subResource.layerCount = 1;
+
+		VkImageCopy region = {};
+		region.srcSubresource = subResource;
+		region.dstSubresource = subResource;
+		region.srcOffset = { 0, 0, 0 };
+		region.dstOffset = { 0, 0, 0 };
+		region.extent.width = width;
+		region.extent.height = height;
+		region.extent.depth = 1;
+
+		vkCmdCopyImage(commandBuffer, srcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+		endSingleTimeCommands(commandBuffer);
+	}
+
 #pragma endregion
 
 #pragma region Vertex buffer
