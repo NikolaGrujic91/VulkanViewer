@@ -244,6 +244,8 @@ private:
 	VDeleter<VkBuffer> uniformBuffer{ device, vkDestroyBuffer };
 	VDeleter<VkDeviceMemory> uniformBufferMemory{ device, vkFreeMemory };
 
+	VDeleter<VkDescriptorPool> descriptorPool{ device, vkDestroyDescriptorPool };
+
 	///<summary>Initialize GLFW and create window</summary>
 	void initWindow() {
 		glfwInit();
@@ -272,6 +274,7 @@ private:
 		createVertexBuffer();
 		createIndexBuffer();
 		createUniformBuffer();
+		createDescriptorPool();
 		createCommandBuffers();
 		createSemaphores();
 	}
@@ -1077,6 +1080,27 @@ private:
 
 		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformStagingBuffer, uniformStagingBufferMemory);
 		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, uniformBuffer, uniformBufferMemory);
+	}
+
+#pragma endregion
+
+#pragma region Descriptor Pool
+
+	void createDescriptorPool() {
+		// Describe which descriptor types our descriptor sets are going to contain and how many of them
+		VkDescriptorPoolSize poolSize = {};
+		poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSize.descriptorCount = 1;
+
+		VkDescriptorPoolCreateInfo poolInfo = {};
+		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolInfo.poolSizeCount = 1;
+		poolInfo.pPoolSizes = &poolSize;
+		// Specify the maximum number of descriptor sets that will be allocated
+		poolInfo.maxSets = 1;
+
+		if (vkCreateDescriptorPool(device, &poolInfo, nullptr, descriptorPool.replace()) != VK_SUCCESS)
+			throw std::runtime_error("failed to create descriptor pool!");
 	}
 
 #pragma endregion
