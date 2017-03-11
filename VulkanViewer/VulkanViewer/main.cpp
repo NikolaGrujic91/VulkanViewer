@@ -1,4 +1,5 @@
 #define GLFW_INCLUDE_VULKAN
+#define GLM_FORCE_RADIANS
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <stdexcept>
@@ -9,7 +10,9 @@
 #include <cstring>
 #include <set>
 #include <array>
+#include <chrono>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -236,6 +239,11 @@ private:
 	VDeleter<VkBuffer> indexBuffer{ device, vkDestroyBuffer };
 	VDeleter<VkDeviceMemory> indexBufferMemory{ device, vkFreeMemory };
 
+	VDeleter<VkBuffer> uniformStagingBuffer{ device, vkDestroyBuffer };
+	VDeleter<VkDeviceMemory> uniformStagingBufferMemory{ device, vkFreeMemory };
+	VDeleter<VkBuffer> uniformBuffer{ device, vkDestroyBuffer };
+	VDeleter<VkDeviceMemory> uniformBufferMemory{ device, vkFreeMemory };
+
 	///<summary>Initialize GLFW and create window</summary>
 	void initWindow() {
 		glfwInit();
@@ -263,6 +271,7 @@ private:
 		createCommandPool();
 		createVertexBuffer();
 		createIndexBuffer();
+		createUniformBuffer();
 		createCommandBuffers();
 		createSemaphores();
 	}
@@ -1061,6 +1070,17 @@ private:
 
 #pragma endregion
 
+#pragma region Uniform buffer
+
+	void createUniformBuffer() {
+		VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+
+		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformStagingBuffer, uniformStagingBufferMemory);
+		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, uniformBuffer, uniformBufferMemory);
+	}
+
+#pragma endregion
+
 #pragma region Command buffers
 
 	void createCommandBuffers() {
@@ -1130,12 +1150,45 @@ private:
 	void mainLoop() {
 		while (!glfwWindowShouldClose(window)) {
 			glfwPollEvents();
+			updateUniformBuffer();
 			drawFrame();
 		}
 
 		vkDeviceWaitIdle(device);
 
 		glfwDestroyWindow(window);
+	}
+
+	// Updates the uniform buffer with a new transformation every frame to make the geometry spin around
+	void updateUniformBuffer() {
+		// Calculate the time in seconds since rendering has started with millisecond accuracy
+		static auto startTime = std::chrono::high_resolution_clock::now();
+		auto currentTime = std::chrono::high_resolution_clock::now();
+		float time = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count() / 1000.0f;
+
+		// Model transformation
+		// The model rotation will be a simple rotation around the Z-axis using the time variable
+		UniformBufferObject ubo = {};
+		ubo.model = glm::rotate(glm::mat4(), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		// View transformation
+		// Look at the geometry from above at a 45 degree angle
+		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		// Projection transformation
+		// Use a perspective projection with a 45 degree vertical field-of-view. The other parameters are the aspect ratio, near and far view planes.
+		ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
+
+		// GLM was originally designed for OpenGL, where the Y coordinate of the clip coordinates is inverted.
+		// The easiest way to compensate for that is to flip the sign on the scaling factor of the Y axis in the projection matrix.
+		ubo.proj[1][1] *= -1;
+
+		// Copy the data in the uniform buffer object to the uniform buffer
+		void* data;
+		vkMapMemory(device, uniformStagingBufferMemory, 0, sizeof(ubo), 0, &data);
+		memcpy(data, &ubo, sizeof(ubo));
+		vkUnmapMemory(device, uniformStagingBufferMemory);
+		copyBuffer(uniformStagingBuffer, uniformBuffer, sizeof(ubo));
 	}
 
 	void drawFrame() {
