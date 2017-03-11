@@ -55,6 +55,12 @@ struct Vertex {
 	}
 };
 
+struct UniformBufferObject {
+	glm::mat4 model;
+	glm::mat4 view;
+	glm::mat4 proj;
+};
+
 //List of validation layers to enable
 const std::vector<const char*> validationLayers = { "VK_LAYER_LUNARG_standard_validation" };
 //List of swapchain device extensions to enable
@@ -215,6 +221,7 @@ private:
 	std::vector<VDeleter<VkFramebuffer>> swapChainFramebuffers;
 
 	VDeleter<VkRenderPass> renderPass{ device, vkDestroyRenderPass };
+	VDeleter<VkDescriptorSetLayout> descriptorSetLayout{ device, vkDestroyDescriptorSetLayout };
 	VDeleter<VkPipelineLayout> pipelineLayout{ device, vkDestroyPipelineLayout };
 	VDeleter<VkPipeline> graphicsPipeline{ device, vkDestroyPipeline };
 
@@ -250,6 +257,7 @@ private:
 		createSwapChain();
 		createImageViews();
 		createRenderPass();
+		createDescriptorSetLayout();
 		createGraphicsPipeline();
 		createFramebuffers();
 		createCommandPool();
@@ -752,6 +760,27 @@ private:
 
 #pragma endregion
 
+#pragma region Descriptor Set Layout
+
+	void createDescriptorSetLayout() {
+		VkDescriptorSetLayoutBinding uboLayoutBinding = {};
+		uboLayoutBinding.binding = 0;
+		uboLayoutBinding.descriptorCount = 1;
+		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
+		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;		
+
+		VkDescriptorSetLayoutCreateInfo layoutInfo = {};
+		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		layoutInfo.bindingCount = 1;
+		layoutInfo.pBindings = &uboLayoutBinding;
+
+		if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, descriptorSetLayout.replace()) != VK_SUCCESS)
+			throw std::runtime_error("failed to create descriptor set layout!");
+	}
+
+#pragma endregion
+
 #pragma region  Graphics Pipeline
 
 	void createGraphicsPipeline() {
@@ -840,10 +869,11 @@ private:
 		colorBlending.blendConstants[2] = 0.0f;
 		colorBlending.blendConstants[3] = 0.0f;
 
+		VkDescriptorSetLayout setLayouts[] = { descriptorSetLayout };
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutInfo.setLayoutCount = 0;
-		pipelineLayoutInfo.pushConstantRangeCount = 0;
+		pipelineLayoutInfo.setLayoutCount = 1;
+		pipelineLayoutInfo.pSetLayouts = setLayouts;
 
 		if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, pipelineLayout.replace()) != VK_SUCCESS)
 			throw std::runtime_error("failed to create pipeline layout!");
