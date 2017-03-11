@@ -239,6 +239,7 @@ private:
 	VDeleter<VkImage> textureImage{ device, vkDestroyImage };
 	VDeleter<VkDeviceMemory> textureImageMemory{ device, vkFreeMemory };
 	VDeleter<VkImageView> textureImageView{ device, vkDestroyImageView };
+	VDeleter<VkSampler> textureSampler{ device, vkDestroySampler };
 
 	VDeleter<VkBuffer> vertexBuffer{ device, vkDestroyBuffer };
 	VDeleter<VkDeviceMemory> vertexBufferMemory{ device, vkFreeMemory };
@@ -280,6 +281,7 @@ private:
 		createCommandPool();
 		createTextureImage();
 		createTextureImageView();
+		createTextureSampler();
 		createVertexBuffer();
 		createIndexBuffer();
 		createUniformBuffer();
@@ -1152,6 +1154,34 @@ private:
 
 		if (vkCreateImageView(device, &viewInfo, nullptr, textureImageView.replace()) != VK_SUCCESS)
 			throw std::runtime_error("failed to create texture image view!");
+	}
+
+#pragma endregion
+
+#pragma region Texture Sampler
+
+	void createTextureSampler() {
+		// Structure which specifies all filters and transformations that it should apply
+		VkSamplerCreateInfo samplerInfo = {};
+		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		samplerInfo.magFilter = VK_FILTER_LINEAR;
+		samplerInfo.minFilter = VK_FILTER_LINEAR;
+		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.anisotropyEnable = VK_TRUE;
+		samplerInfo.maxAnisotropy = 16;
+		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+		samplerInfo.unnormalizedCoordinates = VK_FALSE;
+		samplerInfo.compareEnable = VK_FALSE;
+		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		samplerInfo.mipLodBias = 0.0f;
+		samplerInfo.minLod = 0.0f;
+		samplerInfo.maxLod = 0.0f;
+
+		if (vkCreateSampler(device, &samplerInfo, nullptr, textureSampler.replace()) != VK_SUCCESS)
+			throw std::runtime_error("failed to create texture sampler!");
 	}
 
 #pragma endregion
