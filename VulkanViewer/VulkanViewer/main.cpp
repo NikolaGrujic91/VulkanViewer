@@ -1079,8 +1079,25 @@ private:
 		barrier.subresourceRange.levelCount = 1;
 		barrier.subresourceRange.baseArrayLayer = 0;
 		barrier.subresourceRange.layerCount = 1;
-		barrier.srcAccessMask = 0; // TODO
-		barrier.dstAccessMask = 0; 
+
+		// There are three transitions we need to handle :
+		// Preinitialized -> transfer source : transfer reads should wait on host writes
+		// Preinitialized -> transfer destination : transfer writes should wait on host writes
+		// Transfer destination -> shader reading : shader reads should wait on transfer writes
+		if (oldLayout == VK_IMAGE_LAYOUT_PREINITIALIZED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
+			barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+			barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		}
+		else if (oldLayout == VK_IMAGE_LAYOUT_PREINITIALIZED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+			barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+			barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		}
+		else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		}
+		else
+			throw std::invalid_argument("unsupported layout transition!");
 
 		// First parameter specifies in which pipeline stage the operations occur that should happen before the barrier.
 		// Second parameter specifies the pipeline stage in which operations will wait on the barrier.
@@ -1091,7 +1108,7 @@ private:
 		endSingleTimeCommands(commandBuffer);
 	}
 
-	void copyImage(VkImage srcImage, VkImage dstImage, uint32_t width, uint32_t height) {
+	void copyImage(VkImage srcImage, VkImage dstImage, uint32_t width, uint32_t height)  {
 		VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
 		// Specify which part of the image needs to be copied to which part of the other image.
