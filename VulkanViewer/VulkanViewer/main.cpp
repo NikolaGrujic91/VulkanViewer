@@ -236,6 +236,9 @@ private:
 	VDeleter<VkSemaphore> imageAvailableSemaphore{ device, vkDestroySemaphore };//signal that an image has been acquired and is ready for rendering
 	VDeleter<VkSemaphore> renderFinishedSemaphore{ device, vkDestroySemaphore };//signal that rendering has finished and presentation can happen
 
+	VDeleter<VkImage> textureImage{ device, vkDestroyImage };
+	VDeleter<VkDeviceMemory> textureImageMemory{ device, vkFreeMemory };
+
 	VDeleter<VkBuffer> vertexBuffer{ device, vkDestroyBuffer };
 	VDeleter<VkDeviceMemory> vertexBufferMemory{ device, vkFreeMemory };
 	VDeleter<VkBuffer> indexBuffer{ device, vkDestroyBuffer };
@@ -980,53 +983,20 @@ private:
 
 		VDeleter<VkImage> stagingImage{ device, vkDestroyImage };
 		VDeleter<VkDeviceMemory> stagingImageMemory{ device, vkFreeMemory };
+		createImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_LINEAR, VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingImage, stagingImageMemory);
 
-		// Specify parameters for an image
-		VkImageCreateInfo imageInfo = {};
-		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		imageInfo.imageType = VK_IMAGE_TYPE_2D;
-		imageInfo.extent.width = texWidth;
-		imageInfo.extent.height = texHeight;
-		imageInfo.extent.depth = 1;
-		imageInfo.mipLevels = 1;
-		imageInfo.arrayLayers = 1;
-		imageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
-		imageInfo.tiling = VK_IMAGE_TILING_LINEAR;
-		imageInfo.initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
-		imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-		imageInfo.flags = 0; // Optional
+		// Handle padding bytes between rows of pixels
+		VkImageSubresource subresource = {};
+		subresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		subresource.mipLevel = 0;
+		subresource.arrayLayer = 0;
 
-		if (vkCreateImage(device, &imageInfo, nullptr, stagingImage.replace()) != VK_SUCCESS)
-			throw std::runtime_error("failed to create image!");
-
-		// Allocating memory for image
-		VkMemoryRequirements memRequirements;
-		vkGetImageMemoryRequirements(device, stagingImage, &memRequirements);
-
-		VkMemoryAllocateInfo allocInfo = {};
-		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		allocInfo.allocationSize = memRequirements.size;
-		allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-		if (vkAllocateMemory(device, &allocInfo, nullptr, stagingImageMemory.replace()) != VK_SUCCESS)
-			throw std::runtime_error("failed to allocate image memory!");
-
-		vkBindImageMemory(device, stagingImage, stagingImageMemory, 0);
+		VkSubresourceLayout stagingImageLayout;
+		vkGetImageSubresourceLayout(device, stagingImage, &subresource, &stagingImageLayout);
 
 		// Temporarily access the memory of the staging image directly from our application.
 		void* data;
 		vkMapMemory(device, stagingImageMemory, 0, imageSize, 0, &data);
-
-			// Handle padding bytes between rows of pixels
-			VkImageSubresource subresource = {};
-			subresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			subresource.mipLevel = 0;
-			subresource.arrayLayer = 0;
-
-			VkSubresourceLayout stagingImageLayout;
-			vkGetImageSubresourceLayout(device, stagingImage, &subresource, &stagingImageLayout);
 
 			// When images have a power-of-2 size (e.g. 512 or 1024)
 			if (stagingImageLayout.rowPitch == texWidth * 4)
@@ -1042,6 +1012,46 @@ private:
 
 		// Clean up the original pixel array
 		stbi_image_free(pixels);
+
+		// Final texture image can now be created
+		createImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM,VK_IMAGE_TILING_OPTIMAL,VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
+	}
+
+	void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VDeleter<VkImage>& image, VDeleter<VkDeviceMemory>& imageMemory) {
+		// Specify parameters for an image
+		VkImageCreateInfo imageInfo = {};
+		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		imageInfo.imageType = VK_IMAGE_TYPE_2D;
+		imageInfo.extent.width = width;
+		imageInfo.extent.height = height;
+		imageInfo.extent.depth = 1;
+		imageInfo.mipLevels = 1;
+		imageInfo.arrayLayers = 1;
+		imageInfo.format = format;
+		imageInfo.tiling = tiling;
+		imageInfo.initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
+		imageInfo.usage = usage;
+		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+		if (vkCreateImage(device, &imageInfo, nullptr, image.replace()) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create image!");
+		}
+
+		// Allocating memory for image
+		VkMemoryRequirements memRequirements;
+		vkGetImageMemoryRequirements(device, image, &memRequirements);
+
+		VkMemoryAllocateInfo allocInfo = {};
+		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocInfo.allocationSize = memRequirements.size;
+		allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+
+		if (vkAllocateMemory(device, &allocInfo, nullptr, imageMemory.replace()) != VK_SUCCESS) {
+			throw std::runtime_error("failed to allocate image memory!");
+		}
+
+		vkBindImageMemory(device, image, imageMemory, 0);
 	}
 
 #pragma endregion
