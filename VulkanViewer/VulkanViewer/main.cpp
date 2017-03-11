@@ -238,6 +238,7 @@ private:
 
 	VDeleter<VkImage> textureImage{ device, vkDestroyImage };
 	VDeleter<VkDeviceMemory> textureImageMemory{ device, vkFreeMemory };
+	VDeleter<VkImageView> textureImageView{ device, vkDestroyImageView };
 
 	VDeleter<VkBuffer> vertexBuffer{ device, vkDestroyBuffer };
 	VDeleter<VkDeviceMemory> vertexBufferMemory{ device, vkFreeMemory };
@@ -278,6 +279,7 @@ private:
 		createFramebuffers();
 		createCommandPool();
 		createTextureImage();
+		createTextureImageView();
 		createVertexBuffer();
 		createIndexBuffer();
 		createUniformBuffer();
@@ -1108,7 +1110,7 @@ private:
 		endSingleTimeCommands(commandBuffer);
 	}
 
-	void copyImage(VkImage srcImage, VkImage dstImage, uint32_t width, uint32_t height)  {
+	void copyImage(VkImage srcImage, VkImage dstImage, uint32_t width, uint32_t height) {
 		VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
 		// Specify which part of the image needs to be copied to which part of the other image.
@@ -1130,6 +1132,26 @@ private:
 		vkCmdCopyImage(commandBuffer, srcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
 		endSingleTimeCommands(commandBuffer);
+	}
+
+#pragma endregion
+
+#pragma region Texture Image View
+
+	void createTextureImageView() {
+		VkImageViewCreateInfo viewInfo = {};
+		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		viewInfo.image = textureImage;
+		viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		viewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+		viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		viewInfo.subresourceRange.baseMipLevel = 0;
+		viewInfo.subresourceRange.levelCount = 1;
+		viewInfo.subresourceRange.baseArrayLayer = 0;
+		viewInfo.subresourceRange.layerCount = 1;
+
+		if (vkCreateImageView(device, &viewInfo, nullptr, textureImageView.replace()) != VK_SUCCESS)
+			throw std::runtime_error("failed to create texture image view!");
 	}
 
 #pragma endregion
