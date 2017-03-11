@@ -1,2 +1,4 @@
-﻿  VulkanViewer.vcxproj -> C:\Users\Nikola\Desktop\VulkanViewer\Debug\VulkanViewer.exe
-  VulkanViewer.vcxproj -> C:\Users\Nikola\Desktop\VulkanViewer\Debug\VulkanViewer.pdb (Full PDB)
+﻿  main.cpp
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  VulkanViewer.vcxproj -> C:\Users\Nikola\Documents\GitHub\VulkanViewer\VulkanViewer\Debug\VulkanViewer.exe
+  VulkanViewer.vcxproj -> C:\Users\Nikola\Documents\GitHub\VulkanViewer\VulkanViewer\Debug\VulkanViewer.pdb (Full PDB)
