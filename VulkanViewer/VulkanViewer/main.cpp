@@ -15,9 +15,11 @@
 #include <cstring>
 #include <set>
 #include <array>
+#include <unordered_map>
 #include <chrono>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/hash.hpp>
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -69,6 +71,10 @@ struct Vertex {
 		attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
 		return attributeDescriptions;
 	}
+
+	bool operator==(const Vertex& other) const {
+		return pos == other.pos && color == other.color && texCoord == other.texCoord;
+	}
 };
 
 struct UniformBufferObject {
@@ -81,6 +87,17 @@ struct UniformBufferObject {
 const std::vector<const char*> validationLayers = { "VK_LAYER_LUNARG_standard_validation" };
 //List of swapchain device extensions to enable
 const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+
+// Hash function for Vertex 
+namespace std {
+	template<> struct hash<Vertex> {
+		size_t operator()(Vertex const& vertex) const {
+			return ((hash<glm::vec3>()(vertex.pos) ^
+				(hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
+				(hash<glm::vec2>()(vertex.texCoord) << 1);
+		}
+	};
+}
 
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
@@ -1294,6 +1311,9 @@ private:
 		if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, MODEL_PATH.c_str()))
 			throw std::runtime_error(err);
 
+		// Unordered_map to keep track of the unique vertices and their index
+		std::unordered_map<Vertex, int> uniqueVertices = {};
+
 		// Combine all of the faces in the file into a single model, so just iterate over all of the shapes
 		for (const auto& shape : shapes)
 			// Iterate over the vertices and dump them straight into our vertices vector
@@ -1315,8 +1335,12 @@ private:
 
 				vertex.color = { 1.0f, 1.0f, 1.0f };
 
-				vertices.push_back(vertex);
-				indices.push_back(indices.size());
+				if (uniqueVertices.count(vertex) == 0) {
+					uniqueVertices[vertex] = vertices.size();
+					vertices.push_back(vertex);
+				}
+
+				indices.push_back(uniqueVertices[vertex]);
 			}
 
 		std::cout << "Vertices size:" << vertices.size() << std::endl;
