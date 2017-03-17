@@ -20,6 +20,9 @@
 const int WIDTH = 800;
 const int HEIGHT = 600;
 
+const std::string MODEL_PATH = "models/chalet.obj";
+const std::string TEXTURE_PATH = "textures/chalet.jpg";
+
 struct QueueFamilyIndices {
 	int graphicsFamily = -1;
 	int presentFamily = -1;
@@ -1083,7 +1086,7 @@ private:
 	void createTextureImage() {
 		int texWidth, texHeight, texChannels;
 		// The stbi_load function takes the file path, width, height and actual number of channels in the image, STBI_rgb_alpha value forces the image to be loaded with an alpha channel
-		stbi_uc* pixels = stbi_load("textures/texture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+		stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 		VkDeviceSize imageSize = texWidth * texHeight * 4;
 
 		if (!pixels)
