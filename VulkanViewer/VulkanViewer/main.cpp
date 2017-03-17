@@ -2,7 +2,9 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define STB_IMAGE_IMPLEMENTATION
+#define TINYOBJLOADER_IMPLEMENTATION
 #include <stb_image.h>
+#include <tiny_obj_loader.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <stdexcept>
@@ -79,23 +81,6 @@ struct UniformBufferObject {
 const std::vector<const char*> validationLayers = { "VK_LAYER_LUNARG_standard_validation" };
 //List of swapchain device extensions to enable
 const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-//Array of vertex data for vertex shader
-const std::vector<Vertex> vertices = {
-	{ { -0.5f, -0.5f, 0.0f },{ 1.0f, 0.0f, 0.0f },{ 0.0f, 0.0f } },
-	{ { 0.5f, -0.5f, 0.0f },{ 0.0f, 1.0f, 0.0f },{ 1.0f, 0.0f } },
-	{ { 0.5f, 0.5f, 0.0f },{ 0.0f, 0.0f, 1.0f },{ 1.0f, 1.0f } },
-	{ { -0.5f, 0.5f, 0.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 1.0f } },
-
-	{ { -0.5f, -0.5f, -0.5f },{ 1.0f, 0.0f, 0.0f },{ 0.0f, 0.0f } },
-	{ { 0.5f, -0.5f, -0.5f },{ 0.0f, 1.0f, 0.0f },{ 1.0f, 0.0f } },
-	{ { 0.5f, 0.5f, -0.5f },{ 0.0f, 0.0f, 1.0f },{ 1.0f, 1.0f } },
-	{ { -0.5f, 0.5f, -0.5f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 1.0f } }
-};
-//Array that represents the contents of the index buffer
-const std::vector<uint16_t> indices = {
-	0, 1, 2, 2, 3, 0,
-	4, 5, 6, 6, 7, 4
-};
 
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
@@ -260,6 +245,9 @@ private:
 	VDeleter<VkImageView> textureImageView{ device, vkDestroyImageView };
 	VDeleter<VkSampler> textureSampler{ device, vkDestroySampler };
 
+	std::vector<Vertex> vertices; // Used for loading vertices from model 
+	std::vector<uint32_t> indices; // Used for loading indices from model
+
 	VDeleter<VkBuffer> vertexBuffer{ device, vkDestroyBuffer };
 	VDeleter<VkDeviceMemory> vertexBufferMemory{ device, vkFreeMemory };
 	VDeleter<VkBuffer> indexBuffer{ device, vkDestroyBuffer };
@@ -304,6 +292,7 @@ private:
 		createTextureImage();
 		createTextureImageView();
 		createTextureSampler();
+		loadModel();
 		createVertexBuffer();
 		createIndexBuffer();
 		createUniformBuffer();
@@ -1293,6 +1282,48 @@ private:
 
 #pragma endregion
 
+#pragma region Load Model
+
+	void loadModel() {
+		tinyobj::attrib_t attrib; // Contains all of the positions, normals and texture coordinates
+		std::vector<tinyobj::shape_t> shapes; // Contains all of the separate objects and their faces
+		std::vector<tinyobj::material_t> materials;
+		std::string err;
+
+		// Load model into the library's data structures
+		if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, MODEL_PATH.c_str()))
+			throw std::runtime_error(err);
+
+		// Combine all of the faces in the file into a single model, so just iterate over all of the shapes
+		for (const auto& shape : shapes)
+			// Iterate over the vertices and dump them straight into our vertices vector
+			for (const auto& index : shape.mesh.indices) {
+				Vertex vertex = {};
+
+				vertex.pos = {
+					attrib.vertices[3 * index.vertex_index + 0],
+					attrib.vertices[3 * index.vertex_index + 1],
+					attrib.vertices[3 * index.vertex_index + 2]
+				};
+
+				// Texture coordinates in Vulkan is the top-left corner
+				// Solve this by flipping the vertical component of the texture coordinates
+				vertex.texCoord = {
+					attrib.texcoords[2 * index.texcoord_index + 0],
+					1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+				};
+
+				vertex.color = { 1.0f, 1.0f, 1.0f };
+
+				vertices.push_back(vertex);
+				indices.push_back(indices.size());
+			}
+
+		std::cout << "Vertices size:" << vertices.size() << std::endl;
+	}
+
+#pragma endregion
+
 #pragma region Vertex buffer
 
 	void createVertexBuffer() {
@@ -1544,7 +1575,7 @@ private:
 				VkBuffer vertexBuffers[] = { vertexBuffer };
 				VkDeviceSize offsets[] = { 0 };
 				vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
-				vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+				vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 				// Bind the descriptor set to the descriptors in the shader
 				vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
 
@@ -1595,7 +1626,7 @@ private:
 		// Model transformation
 		// The model rotation will be a simple rotation around the Z-axis using the time variable
 		UniformBufferObject ubo = {};
-		ubo.model = glm::rotate(glm::mat4(), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		ubo.model = glm::rotate(glm::mat4(), time * glm::radians(30.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
 		// View transformation
 		// Look at the geometry from above at a 45 degree angle
