@@ -23,9 +23,10 @@
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
-
 const std::string MODEL_PATH = "models/chalet.obj";
 const std::string TEXTURE_PATH = "textures/chalet.jpg";
+const std::vector<const char*> validationLayers = { "VK_LAYER_LUNARG_standard_validation" }; //List of validation layers to enable
+const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME }; //List of swapchain device extensions to enable
 
 struct QueueFamilyIndices {
 	int graphicsFamily = -1;
@@ -82,11 +83,6 @@ struct UniformBufferObject {
 	glm::mat4 view;
 	glm::mat4 proj;
 };
-
-//List of validation layers to enable
-const std::vector<const char*> validationLayers = { "VK_LAYER_LUNARG_standard_validation" };
-//List of swapchain device extensions to enable
-const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 // Hash function for Vertex 
 namespace std {
@@ -250,8 +246,8 @@ private:
 	VDeleter<VkCommandPool> commandPool{ device, vkDestroyCommandPool };
 	std::vector<VkCommandBuffer> commandBuffers;
 
-	VDeleter<VkSemaphore> imageAvailableSemaphore{ device, vkDestroySemaphore };//signal that an image has been acquired and is ready for rendering
-	VDeleter<VkSemaphore> renderFinishedSemaphore{ device, vkDestroySemaphore };//signal that rendering has finished and presentation can happen
+	VDeleter<VkSemaphore> imageAvailableSemaphore{ device, vkDestroySemaphore }; // Signal that an image has been acquired and is ready for rendering
+	VDeleter<VkSemaphore> renderFinishedSemaphore{ device, vkDestroySemaphore }; // Signal that rendering has finished and presentation can happen
 
 	VDeleter<VkImage> depthImage{ device, vkDestroyImage };
 	VDeleter<VkDeviceMemory> depthImageMemory{ device, vkFreeMemory };
@@ -278,13 +274,13 @@ private:
 	VDeleter<VkDescriptorPool> descriptorPool{ device, vkDestroyDescriptorPool };
 	VkDescriptorSet descriptorSet;
 
-	///<summary>Initialize GLFW and create window</summary>
+	// Initialize GLFW and create window
 	void initWindow() {
 		glfwInit();
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-		window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+		window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan Viewer", nullptr, nullptr);
 
 		glfwSetWindowUserPointer(window, this);
 		glfwSetWindowSizeCallback(window, VulkanInitializer::onWindowResized);
