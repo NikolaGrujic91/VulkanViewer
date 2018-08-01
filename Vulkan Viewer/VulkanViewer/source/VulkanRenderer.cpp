@@ -4,7 +4,8 @@
 #include "MeshData.h"
 
 VulkanRenderer::VulkanRenderer(VulkanApplication * app, VulkanDevice* deviceObject) :
-    _shaderObj(&deviceObject->_device)
+    _shaderObj(&deviceObject->_device),
+    _pipelineObj(&deviceObject->_device, &_renderPass)
 {
     // Note: It's very important to initilize the member with 0 or respective value other wise it will break the system
     memset(&_depth, 0, sizeof(_depth));
