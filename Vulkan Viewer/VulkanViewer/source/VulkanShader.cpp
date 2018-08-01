@@ -1,79 +1,51 @@
-/*
-* Learning Vulkan - ISBN: 9781786469809
-*
-* Author: Parminder Singh, parminder.vulkan@gmail.com
-* Linkedin: https://www.linkedin.com/in/parmindersingh18
-*
-* Permission is hereby granted, free of charge, to any person obtaining a
-* copy of this software and associated documentation files (the "Software"),
-* to deal in the Software without restriction, including without limitation
-* the rights to use, copy, modify, merge, publish, distribute, sublicense,
-* and/or sell copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-* DEALINGS IN THE SOFTWARE.
-*/
-
 #include "VulkanShader.h"
 #include "VulkanApplication.h"
 #include "VulkanDevice.h"
 
-
-void VulkanShader::buildShaderModuleWithSPV(uint32_t *vertShaderText, size_t vertexSPVSize, uint32_t *fragShaderText, size_t fragmentSPVSize)
+void VulkanShader::BuildShaderModuleWithSpv(uint32_t *vertShaderText, size_t vertexSPVSize, uint32_t *fragShaderText, size_t fragmentSPVSize)
 {
-	VulkanDevice* deviceObj = VulkanApplication::GetInstance()->deviceObj;
+	VulkanDevice* deviceObj = VulkanApplication::GetInstance()->_deviceObj;
 
-	VkResult  result;
-
-	// Fill in the control structure to push the necessary
+    // Fill in the control structure to push the necessary
 	// details of the shader.
-	shaderStages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	shaderStages[0].pNext = NULL;
-	shaderStages[0].pSpecializationInfo = NULL;
-	shaderStages[0].flags = 0;
-	shaderStages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-	shaderStages[0].pName = "main";
+	_shaderStages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	_shaderStages[0].pNext = nullptr;
+	_shaderStages[0].pSpecializationInfo = nullptr;
+	_shaderStages[0].flags = 0;
+	_shaderStages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+	_shaderStages[0].pName = "main";
 
 	VkShaderModuleCreateInfo moduleCreateInfo;
 	moduleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	moduleCreateInfo.pNext = NULL;
+	moduleCreateInfo.pNext = nullptr;
 	moduleCreateInfo.flags = 0;
 	moduleCreateInfo.codeSize = vertexSPVSize;
 	moduleCreateInfo.pCode = vertShaderText;
-	result = vkCreateShaderModule(deviceObj->device, &moduleCreateInfo, NULL, &shaderStages[0].module);
+	VkResult result = vkCreateShaderModule(deviceObj->_device, &moduleCreateInfo, nullptr, &_shaderStages[0].module);
 	assert(result == VK_SUCCESS);
 
 	std::vector<unsigned int> fragSPV;
-	shaderStages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	shaderStages[1].pNext = NULL;
-	shaderStages[1].pSpecializationInfo = NULL;
-	shaderStages[1].flags = 0;
-	shaderStages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	shaderStages[1].pName = "main";
+	_shaderStages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	_shaderStages[1].pNext = nullptr;
+	_shaderStages[1].pSpecializationInfo = nullptr;
+	_shaderStages[1].flags = 0;
+	_shaderStages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+	_shaderStages[1].pName = "main";
 
 	moduleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	moduleCreateInfo.pNext = NULL;
+	moduleCreateInfo.pNext = nullptr;
 	moduleCreateInfo.flags = 0;
 	moduleCreateInfo.codeSize = fragmentSPVSize;
 	moduleCreateInfo.pCode = fragShaderText;
-	result = vkCreateShaderModule(deviceObj->device, &moduleCreateInfo, NULL, &shaderStages[1].module);
+	result = vkCreateShaderModule(deviceObj->_device, &moduleCreateInfo, nullptr, &_shaderStages[1].module);
 	assert(result == VK_SUCCESS);
 }
 
-void VulkanShader::destroyShaders()
+void VulkanShader::DestroyShaders()
 {
-	VulkanDevice* deviceObj = VulkanApplication::GetInstance()->deviceObj;
-	vkDestroyShaderModule(deviceObj->device, shaderStages[0].module, NULL);
-	vkDestroyShaderModule(deviceObj->device, shaderStages[1].module, NULL);
+	VulkanDevice* deviceObj = VulkanApplication::GetInstance()->_deviceObj;
+	vkDestroyShaderModule(deviceObj->_device, _shaderStages[0].module, nullptr);
+	vkDestroyShaderModule(deviceObj->_device, _shaderStages[1].module, nullptr);
 }
 
 #ifdef AUTO_COMPILE_GLSL_TO_SPV
