@@ -15,7 +15,14 @@ VulkanRenderer::VulkanRenderer(VulkanApplication * app, VulkanDevice* deviceObje
     _deviceObj   = deviceObject;
 
     _swapChainObj = new VulkanSwapChain(this);
-    auto* drawableObj = new VulkanDrawable(this);
+    auto* drawableObj = new VulkanDrawable(&_deviceObj->_device,
+                                           &_cmdPool,
+                                           &_renderPass,
+                                           &_deviceObj->_queue,
+                                           &_framebuffers,
+                                           _swapChainObj,
+                                           &_width,
+                                           &_height);
     _drawableList.push_back(drawableObj);
 }
 
