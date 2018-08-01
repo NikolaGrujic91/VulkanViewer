@@ -6,7 +6,7 @@ class VulkanShader
 {
 public:
 	// Constructor
-	VulkanShader() {}
+    VulkanShader(VkDevice* device);
 	
 	// Destructor
 	~VulkanShader() {}
@@ -34,4 +34,5 @@ public:
 
 	// Vk structure storing vertex & fragment shader information
 	VkPipelineShaderStageCreateInfo _shaderStages[2];
+    VkDevice* _device;
 };
