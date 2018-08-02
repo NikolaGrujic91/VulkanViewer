@@ -2,20 +2,12 @@
 #include "Headers.h"
 #include "VulkanDescriptor.h"
 #include "Wrappers.h"
-#include "VulkanSwapChain.h"
 
 class VulkanRenderer;
 class VulkanDrawable : public VulkanDescriptor
 {
 public:
-    VulkanDrawable(VkDevice* device,
-                   VkCommandPool* commandPool,
-                   VkRenderPass* renderPass,
-                   VkQueue* queue,
-                   std::vector<VkFramebuffer>* framebuffers,
-                   VulkanSwapChain* swapChain,
-                   int* width,
-                   int* height);
+	VulkanDrawable(VulkanRenderer* parent = 0);
 	~VulkanDrawable();
 
 	void CreateVertexBuffer(const void *vertexData, uint32_t dataSize, uint32_t dataStride, bool useTexture);
@@ -80,13 +72,6 @@ private:
 	glm::mat4 _model;
 	glm::mat4 _mvp;
 
-	VkPipeline*		            _pipeline;
-    VkDevice*                   _device;
-    VkCommandPool*              _commandPool;
-    VkRenderPass*               _renderPass;
-    VkQueue*					_queue;
-    std::vector<VkFramebuffer>* _framebuffers;
-    VulkanSwapChain*            _swapChain;
-    int*                        _width;
-    int*                        _height;
+	VulkanRenderer* _rendererObj;
+	VkPipeline*		_pipeline;
 };
