@@ -1,12 +1,14 @@
 #include "VulkanPipeline.h"
+#include "VulkanApplication.h"
 #include "VulkanShader.h"
 #include "VulkanRenderer.h"
+#include "VulkanDevice.h"
 
-VulkanPipeline::VulkanPipeline(VkDevice* device, VkRenderPass* renderPass) :
-    _pipelineCache(0),
-    _device(device),
-    _renderPass(renderPass)
-{}
+VulkanPipeline::VulkanPipeline()
+{
+	_appObj = VulkanApplication::GetInstance();
+	_deviceObj = _appObj->_deviceObj;
+}
 
 VulkanPipeline::~VulkanPipeline()
 {
@@ -20,7 +22,7 @@ void VulkanPipeline::CreatePipelineCache()
 	pipelineCacheInfo.initialDataSize	= 0;
 	pipelineCacheInfo.pInitialData		= nullptr;
 	pipelineCacheInfo.flags				= 0;
-    const VkResult result = vkCreatePipelineCache(*_device, &pipelineCacheInfo, nullptr, &_pipelineCache);
+    const VkResult result = vkCreatePipelineCache(_deviceObj->_device, &pipelineCacheInfo, nullptr, &_pipelineCache);
 	assert(result == VK_SUCCESS);
 }
 
@@ -164,15 +166,15 @@ bool VulkanPipeline::CreatePipeline(VulkanDrawable* drawableObj, VkPipeline* pip
 	pipelineInfo.pDepthStencilState		= &depthStencilStateInfo;
 	pipelineInfo.pStages				= shaderObj->_shaderStages;
 	pipelineInfo.stageCount				= 2;
-	pipelineInfo.renderPass				= *_renderPass;
+	pipelineInfo.renderPass				= _appObj->_rendererObj->_renderPass;
 	pipelineInfo.subpass				= 0;
 
 	// Create the pipeline using the meta-data store in the VkGraphicsPipelineCreateInfo object
-    return vkCreateGraphicsPipelines(*_device, _pipelineCache, 1, &pipelineInfo, nullptr, pipeline) == VK_SUCCESS;
+    return vkCreateGraphicsPipelines(_deviceObj->_device, _pipelineCache, 1, &pipelineInfo, nullptr, pipeline) == VK_SUCCESS;
 }
 
 // Destroy the pipeline cache object when no more required
 void VulkanPipeline::DestroyPipelineCache()
 {
-	vkDestroyPipelineCache(*_device, _pipelineCache, nullptr);
+	vkDestroyPipelineCache(_deviceObj->_device, _pipelineCache, nullptr);
 }
