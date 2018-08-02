@@ -1,3 +1,28 @@
+/*
+* Learning Vulkan - ISBN: 9781786469809
+*
+* Author: Parminder Singh, parminder.vulkan@gmail.com
+* Linkedin: https://www.linkedin.com/in/parmindersingh18
+*
+* Permission is hereby granted, free of charge, to any person obtaining a
+* copy of this software and associated documentation files (the "Software"),
+* to deal in the Software without restriction, including without limitation
+* the rights to use, copy, modify, merge, publish, distribute, sublicense,
+* and/or sell copies of the Software, and to permit persons to whom the
+* Software is furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included
+* in all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+* DEALINGS IN THE SOFTWARE.
+*/
+
 #pragma once
 #include "Headers.h"
 #include "VulkanSwapChain.h"
@@ -18,65 +43,61 @@ public:
 	VulkanRenderer(VulkanApplication* app, VulkanDevice* deviceObject);
 	~VulkanRenderer();
 
+public:
 	//Simple life cycle
-	void Initialize();
-	void Prepare();
-	void Update();
-	bool Render();
+	void initialize();
+	void prepare();
+	void update();
+	bool render();
 
 	// Create an empty window
-	void CreatePresentationWindow(const int& windowWidth = 500, const int& windowHeight = 500);
-	void SetImageLayout(VkImage image, 
-                        VkImageAspectFlags aspectMask, 
-                        VkImageLayout oldImageLayout, 
-                        VkImageLayout newImageLayout, 
-                        const VkImageSubresourceRange& subresourceRange, 
-                        const VkCommandBuffer& cmd);
+	void createPresentationWindow(const int& windowWidth = 500, const int& windowHeight = 500);
+	void setImageLayout(VkImage image, VkImageAspectFlags aspectMask, VkImageLayout oldImageLayout, VkImageLayout newImageLayout, const VkImageSubresourceRange& subresourceRange, const VkCommandBuffer& cmdBuf);
 
 	//! Windows procedure method for handling events.
 	static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	// Destroy the presentation window
-	void DestroyPresentationWindow();
+	void destroyPresentationWindow();
 
 	// Getter functions for member variable specific to classes.
-    VulkanApplication*             GetApplication()   { return _application; }
-	VulkanDevice*                  GetDevice()		  { return _deviceObj; }
-	VulkanSwapChain*               GetSwapChain() 	  { return _swapChainObj; }
-	std::vector<VulkanDrawable*>*  GetDrawingItems()  { return &_drawableList; }
-	VkCommandPool*                 GetCommandPool()	  { return &_cmdPool; }
-	VulkanShader*                  GetShader()		  { return &_shaderObj; }
-	VulkanPipeline*	               GetPipelineObject(){ return &_pipelineObj; }
+	inline VulkanApplication* getApplication()		{ return application; }
+	inline VulkanDevice*  getDevice()				{ return deviceObj; }
+	inline VulkanSwapChain*  getSwapChain() 		{ return swapChainObj; }
+	inline std::vector<VulkanDrawable*>*  getDrawingItems() { return &drawableList; }
+	inline VkCommandPool* getCommandPool()			{ return &cmdPool; }
+	inline VulkanShader*  getShader()				{ return &shaderObj; }
+	inline VulkanPipeline*	getPipelineObject()		{ return &pipelineObj; }
 
-	void CreateCommandPool();							// Create command pool
-	void BuildSwapChainAndDepthImage();					// Create swapchain color image and depth image
-	void CreateDepthImage();							// Create depth image
-	void CreateVertexBuffer();
-	void CreateRenderPass(bool includeDepth, bool clear = true);	// Render Pass creation
-	void CreateFrameBuffer(bool includeDepth);
-	void CreateShaders();
-	void CreatePipelineStateManagement();
-	void CreateDescriptors();
-	void CreateTextureLinear (const char* filename, TextureData *texture, VkImageUsageFlags imageUsageFlags = VK_IMAGE_USAGE_SAMPLED_BIT, VkFormat format = VK_FORMAT_R8G8B8A8_UNORM);
-	void CreateTextureOptimal(const char* filename, TextureData *texture, VkImageUsageFlags imageUsageFlags = VK_IMAGE_USAGE_SAMPLED_BIT, VkFormat format = VK_FORMAT_R8G8B8A8_UNORM);
+	void createCommandPool();							// Create command pool
+	void buildSwapChainAndDepthImage();					// Create swapchain color image and depth image
+	void createDepthImage();							// Create depth image
+	void createVertexBuffer();
+	void createRenderPass(bool includeDepth, bool clear = true);	// Render Pass creation
+	void createFrameBuffer(bool includeDepth);
+	void createShaders();
+	void createPipelineStateManagement();
+	void createDescriptors();
+	void createTextureLinear (const char* filename, TextureData *texture, VkImageUsageFlags imageUsageFlags = VK_IMAGE_USAGE_SAMPLED_BIT, VkFormat format = VK_FORMAT_R8G8B8A8_UNORM);
+	void createTextureOptimal(const char* filename, TextureData *texture, VkImageUsageFlags imageUsageFlags = VK_IMAGE_USAGE_SAMPLED_BIT, VkFormat format = VK_FORMAT_R8G8B8A8_UNORM);
 
-	void DestroyCommandBuffer();
-	void DestroyCommandPool();
-	void DestroyDepthBuffer();
-	void DestroyDrawableVertexBuffer();
-	void DestroyRenderpass(); // Destroy the render pass object when no more required
-	void DestroyFramebuffers();
-	void DestroyPipeline();
-	void DestroyDrawableCommandBuffer();
-	void DestroyDrawableSynchronizationObjects();
-	void DestroyDrawableUniformBuffer();
-	void DestroyTextureResource();
-
+	void destroyCommandBuffer();
+	void destroyCommandPool();
+	void destroyDepthBuffer();
+	void destroyDrawableVertexBuffer();
+	void destroyRenderpass();										// Destroy the render pass object when no more required
+	void destroyFramebuffers();
+	void destroyPipeline();
+	void destroyDrawableCommandBuffer();
+	void destroyDrawableSynchronizationObjects();
+	void destroyDrawableUniformBuffer();
+	void destroyTextureResource();
+public:
 #ifdef _WIN32
 #define APP_NAME_STR_LEN 80
-	HINSTANCE					_connection;			 // hInstance - Windows Instance
-	char						_name[APP_NAME_STR_LEN]; // name - App name appearing on the window
-	HWND						_window;				 // hWnd - the window handle
+	HINSTANCE					connection;				// hInstance - Windows Instance
+	char						name[APP_NAME_STR_LEN]; // name - App name appearing on the window
+	HWND						window;					// hWnd - the window handle
 #else
 	xcb_connection_t*			connection;
 	xcb_screen_t*				screen;
@@ -84,32 +105,31 @@ public:
 	xcb_intern_atom_reply_t*	reply;
 #endif
 
-	struct
-    {
-		VkFormat		_format;
-		VkImage			_image;
-		VkDeviceMemory	_mem;
-		VkImageView		_view;
-	}_depth;
+	struct{
+		VkFormat		format;
+		VkImage			image;
+		VkDeviceMemory	mem;
+		VkImageView		view;
+	}Depth;
 
-	VkCommandBuffer		_cmdDepthImage;			// Command buffer for depth image layout
-	VkCommandPool		_cmdPool;				// Command pool
-	VkCommandBuffer		_cmdVertexBuffer;		// Command buffer for vertex buffer - Triangle geometry
-	VkCommandBuffer		_cmdTexture;			// Command buffer for creating the texture
+	VkCommandBuffer		cmdDepthImage;			// Command buffer for depth image layout
+	VkCommandPool		cmdPool;				// Command pool
+	VkCommandBuffer		cmdVertexBuffer;		// Command buffer for vertex buffer - Triangle geometry
+	VkCommandBuffer		cmdTexture;				// Command buffer for creating the texture
 
-	VkRenderPass		       _renderPass;	    // Render pass created object
-	std::vector<VkFramebuffer> _framebuffers;	// Number of frame buffer corresponding to each swap chain
-	std::vector<VkPipeline*>   _pipelineList;	// List of pipelines
+	VkRenderPass		renderPass;				// Render pass created object
+	std::vector<VkFramebuffer> framebuffers;	// Number of frame buffer corresponding to each swap chain
+	std::vector<VkPipeline*> pipelineList;		// List of pipelines
 
-	int					_width, _height;
-	TextureData			_texture;
+	int					width, height;
+	TextureData			texture;
 
 private:
-	VulkanApplication* _application;
+	VulkanApplication* application;
 	// The device object associated with this Presentation layer.
-	VulkanDevice*	             _deviceObj;
-	VulkanSwapChain*             _swapChainObj;
-	std::vector<VulkanDrawable*> _drawableList;
-	VulkanShader 	             _shaderObj;
-	VulkanPipeline 	             _pipelineObj;
+	VulkanDevice*	   deviceObj;
+	VulkanSwapChain*   swapChainObj;
+	std::vector<VulkanDrawable*> drawableList;
+	VulkanShader 	   shaderObj;
+	VulkanPipeline 	   pipelineObj;
 };
