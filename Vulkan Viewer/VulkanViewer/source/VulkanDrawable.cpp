@@ -43,7 +43,7 @@ VulkanDrawable::VulkanDrawable(VulkanRenderer* parent) {
 	drawingCompleteSemaphoreCreateInfo.pNext = NULL;
 	drawingCompleteSemaphoreCreateInfo.flags = 0;
 
-	VulkanDevice* deviceObj = VulkanApplication::GetInstance()->deviceObj;
+	VulkanDevice* deviceObj = VulkanApplication::GetInstance()->_deviceObj;
 
 	vkCreateSemaphore(deviceObj->device, &presentCompleteSemaphoreCreateInfo, NULL, &presentCompleteSemaphore);
 	vkCreateSemaphore(deviceObj->device, &drawingCompleteSemaphoreCreateInfo, NULL, &drawingCompleteSemaphore);
@@ -149,7 +149,7 @@ void VulkanDrawable::createUniformBuffer()
 void VulkanDrawable::createVertexBuffer(const void *vertexData, uint32_t dataSize, uint32_t dataStride, bool useTexture)
 {
 	VulkanApplication* appObj	= VulkanApplication::GetInstance();
-	VulkanDevice* deviceObj		= appObj->deviceObj;
+	VulkanDevice* deviceObj		= appObj->_deviceObj;
 
 	VkResult  result;
 	bool  pass;

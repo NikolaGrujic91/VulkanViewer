@@ -43,12 +43,12 @@ std::vector<const char *> deviceExtensionNames = {
 int main(int argc, char **argv)
 {
 	VulkanApplication* appObj = VulkanApplication::GetInstance();
-	appObj->initialize();
-	appObj->prepare();
+	appObj->Initialize();
+	appObj->Prepare();
 	bool isWindowOpen = true;
 	while (isWindowOpen) {
-		appObj->update();
-		isWindowOpen = appObj->render();
+		appObj->Update();
+		isWindowOpen = appObj->Render();
 	}
-	appObj->deInitialize();
+	appObj->DeInitialize();
 }

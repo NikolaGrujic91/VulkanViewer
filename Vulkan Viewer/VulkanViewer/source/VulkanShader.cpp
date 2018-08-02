@@ -30,7 +30,7 @@
 
 void VulkanShader::buildShaderModuleWithSPV(uint32_t *vertShaderText, size_t vertexSPVSize, uint32_t *fragShaderText, size_t fragmentSPVSize)
 {
-	VulkanDevice* deviceObj = VulkanApplication::GetInstance()->deviceObj;
+	VulkanDevice* deviceObj = VulkanApplication::GetInstance()->_deviceObj;
 
 	VkResult  result;
 
@@ -71,7 +71,7 @@ void VulkanShader::buildShaderModuleWithSPV(uint32_t *vertShaderText, size_t ver
 
 void VulkanShader::destroyShaders()
 {
-	VulkanDevice* deviceObj = VulkanApplication::GetInstance()->deviceObj;
+	VulkanDevice* deviceObj = VulkanApplication::GetInstance()->_deviceObj;
 	vkDestroyShaderModule(deviceObj->device, shaderStages[0].module, NULL);
 	vkDestroyShaderModule(deviceObj->device, shaderStages[1].module, NULL);
 }

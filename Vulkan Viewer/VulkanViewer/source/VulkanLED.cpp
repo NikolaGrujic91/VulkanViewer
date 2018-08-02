@@ -97,7 +97,7 @@ VkResult VulkanLayerAndExtension::getDeviceExtensionProperties(VkPhysicalDevice*
 	std::cout << "Device extensions" << std::endl;
 	std::cout << "===================" << std::endl;
 	VulkanApplication* appObj = VulkanApplication::GetInstance();
-	std::vector<LayerProperties>* instanceLayerProp = &appObj->GetInstance()->instanceObj.layerExtension.layerPropertyList;
+	std::vector<LayerProperties>* instanceLayerProp = &appObj->GetInstance()->_instanceObj.layerExtension.layerPropertyList;
 	for (auto globalLayerProp : *instanceLayerProp) {
 		LayerProperties layerProps;
 		layerProps.properties = globalLayerProp.properties;
@@ -155,7 +155,7 @@ VkResult VulkanLayerAndExtension::getExtensionProperties(LayerProperties &layerP
 void VulkanLayerAndExtension::destroyDebugReportCallback()
 {
 	VulkanApplication* appObj = VulkanApplication::GetInstance();
-	VkInstance& instance	= appObj->instanceObj.instance;
+	VkInstance& instance	= appObj->_instanceObj.instance;
 	dbgDestroyDebugReportCallback(instance, debugReportCallback, NULL);
 }
 
@@ -228,7 +228,7 @@ VkResult VulkanLayerAndExtension::createDebugReportCallback()
 	VkResult result;
 
 	VulkanApplication* appObj	= VulkanApplication::GetInstance();
-	VkInstance* instance		= &appObj->instanceObj.instance;
+	VkInstance* instance		= &appObj->_instanceObj.instance;
 
 	// Get vkCreateDebugReportCallbackEXT API
 	dbgCreateDebugReportCallback = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(*instance, "vkCreateDebugReportCallbackEXT");

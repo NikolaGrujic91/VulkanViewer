@@ -29,7 +29,7 @@
 
 VulkanDescriptor::VulkanDescriptor()
 {
-	deviceObj = VulkanApplication::GetInstance()->deviceObj;
+	deviceObj = VulkanApplication::GetInstance()->_deviceObj;
 }
 
 VulkanDescriptor::~VulkanDescriptor()

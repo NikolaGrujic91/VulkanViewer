@@ -137,7 +137,7 @@ LRESULT CALLBACK VulkanRenderer::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 		PostQuitMessage(0);
 		break;
 	case WM_PAINT:
-		for each (VulkanDrawable* drawableObj in appObj->rendererObj->drawableList)
+		for each (VulkanDrawable* drawableObj in appObj->_rendererObj->drawableList)
 		{
 			drawableObj->render();
 		}
@@ -146,10 +146,10 @@ LRESULT CALLBACK VulkanRenderer::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 	
 	case WM_SIZE:
 		if (wParam != SIZE_MINIMIZED) {
-			appObj->rendererObj->width = lParam & 0xffff;
-			appObj->rendererObj->height = (lParam & 0xffff0000) >> 16;
-			appObj->rendererObj->getSwapChain()->setSwapChainExtent(appObj->rendererObj->width, appObj->rendererObj->height);
-			appObj->resize();
+			appObj->_rendererObj->width = lParam & 0xffff;
+			appObj->_rendererObj->height = (lParam & 0xffff0000) >> 16;
+			appObj->_rendererObj->getSwapChain()->setSwapChainExtent(appObj->_rendererObj->width, appObj->_rendererObj->height);
+			appObj->Resize();
 		}
 		break;
 
@@ -292,7 +292,7 @@ void VulkanRenderer::destroyWindow()
 
 void VulkanRenderer::createCommandPool()
 {
-	VulkanDevice* deviceObj		= application->deviceObj;
+	VulkanDevice* deviceObj		= application->_deviceObj;
 	/* Depends on intializeSwapChainExtension() */
 	VkResult  res;
 
@@ -1007,7 +1007,7 @@ void VulkanRenderer::destroyCommandBuffer()
 
 void VulkanRenderer::destroyCommandPool()
 {
-	VulkanDevice* deviceObj		= application->deviceObj;
+	VulkanDevice* deviceObj		= application->_deviceObj;
 
 	vkDestroyCommandPool(deviceObj->device, cmdPool, NULL);
 }
@@ -1039,7 +1039,7 @@ void VulkanRenderer::createVertexBuffer()
 
 void VulkanRenderer::createShaders()
 {
-	if (application->isResizing)
+	if (application->_isResizing)
 		return;
 
 	void* vertShaderCode, *fragShaderCode;

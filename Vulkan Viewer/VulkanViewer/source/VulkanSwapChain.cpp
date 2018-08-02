@@ -63,8 +63,8 @@ VulkanSwapChain::~VulkanSwapChain()
 VkResult VulkanSwapChain::createSwapChainExtensions()
 {
 	// Dependency on createPresentationWindow()
-	VkInstance& instance	= appObj->instanceObj.instance;
-	VkDevice& device		= appObj->deviceObj->device;
+	VkInstance& instance	= appObj->_instanceObj.instance;
+	VkDevice& device		= appObj->_deviceObj->device;
 
 	// Get Instance based swap chain extension function pointer
 	INSTANCE_FUNC_PTR(instance, GetPhysicalDeviceSurfaceSupportKHR);
@@ -87,7 +87,7 @@ VkResult VulkanSwapChain::createSurface()
 {
 	VkResult  result;
 	// Depends on createPresentationWindow(), need an empty window handle
-	VkInstance& instance = appObj->instanceObj.instance;
+	VkInstance& instance = appObj->_instanceObj.instance;
 
 	// Construct the surface description:
 #ifdef _WIN32
@@ -116,7 +116,7 @@ VkResult VulkanSwapChain::createSurface()
 
 uint32_t VulkanSwapChain::getGraphicsQueueWithPresentationSupport()
 {
-	VulkanDevice* device	= appObj->deviceObj;
+	VulkanDevice* device	= appObj->_deviceObj;
 	uint32_t queueCount		= device->queueFamilyCount;
 	VkPhysicalDevice gpu	= *device->gpu;
 	std::vector<VkQueueFamilyProperties>& queueProps = device->queueFamilyProps;
@@ -234,7 +234,7 @@ void VulkanSwapChain::createSwapChain(const VkCommandBuffer& cmd)
 void VulkanSwapChain::getSurfaceCapabilitiesAndPresentMode()
 {
 	VkResult  result;
-	VkPhysicalDevice gpu = *appObj->deviceObj->gpu;
+	VkPhysicalDevice gpu = *appObj->_deviceObj->gpu;
 	result = fpGetPhysicalDeviceSurfaceCapabilitiesKHR(gpu, scPublicVars.surface, &scPrivateVars.surfCapabilities);
 	assert(result == VK_SUCCESS);
 
@@ -381,17 +381,17 @@ void VulkanSwapChain::createColorImageView(const VkCommandBuffer& cmd)
 
 void VulkanSwapChain::destroySwapChain()
 {
-	VulkanDevice* deviceObj = appObj->deviceObj;
+	VulkanDevice* deviceObj = appObj->_deviceObj;
 
 	for (uint32_t i = 0; i < scPublicVars.swapchainImageCount; i++) {
 		vkDestroyImageView(deviceObj->device, scPublicVars.colorBuffer[i].view, NULL);
 	}
 	
-	if (!appObj->isResizing) {
+	if (!appObj->_isResizing) {
 		// This piece code will only executes at application shutdown.
         // During resize the old swapchain image is delete in createSwapChainColorImages()
 		fpDestroySwapchainKHR(deviceObj->device, scPublicVars.swapChain, NULL);
-		vkDestroySurfaceKHR(appObj->instanceObj.instance, scPublicVars.surface, NULL);
+		vkDestroySurfaceKHR(appObj->_instanceObj.instance, scPublicVars.surface, NULL);
 	}
 }
 

@@ -32,7 +32,7 @@
 VulkanPipeline::VulkanPipeline()
 {
 	appObj = VulkanApplication::GetInstance();
-	deviceObj = appObj->deviceObj;
+	deviceObj = appObj->_deviceObj;
 }
 
 VulkanPipeline::~VulkanPipeline()
@@ -193,7 +193,7 @@ bool VulkanPipeline::createPipeline(VulkanDrawable* drawableObj, VkPipeline* pip
 	pipelineInfo.pDepthStencilState		= &depthStencilStateInfo;
 	pipelineInfo.pStages				= shaderObj->shaderStages;
 	pipelineInfo.stageCount				= 2;
-	pipelineInfo.renderPass				= appObj->rendererObj->renderPass;
+	pipelineInfo.renderPass				= appObj->_rendererObj->renderPass;
 	pipelineInfo.subpass				= 0;
 
 	// Create the pipeline using the meta-data store in the VkGraphicsPipelineCreateInfo object

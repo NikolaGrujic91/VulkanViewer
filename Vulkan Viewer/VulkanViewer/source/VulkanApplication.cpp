@@ -1,33 +1,8 @@
-/*
-* Learning Vulkan - ISBN: 9781786469809
-*
-* Author: Parminder Singh, parminder.vulkan@gmail.com
-* Linkedin: https://www.linkedin.com/in/parmindersingh18
-*
-* Permission is hereby granted, free of charge, to any person obtaining a
-* copy of this software and associated documentation files (the "Software"),
-* to deal in the Software without restriction, including without limitation
-* the rights to use, copy, modify, merge, publish, distribute, sublicense,
-* and/or sell copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-* DEALINGS IN THE SOFTWARE.
-*/
-
 #include "VulkanApplication.h"
 #include "VulkanDrawable.h"
 
-std::unique_ptr<VulkanApplication> VulkanApplication::instance;
-std::once_flag VulkanApplication::onlyOnce;
+std::unique_ptr<VulkanApplication> VulkanApplication::_instance;
+std::once_flag VulkanApplication::_onlyOnce;
 
 extern std::vector<const char *> instanceExtensionNames;
 extern std::vector<const char *> layerNames;
@@ -38,30 +13,31 @@ extern std::vector<const char *> deviceExtensionNames;
 VulkanApplication::VulkanApplication() 
 {
 	// At application start up, enumerate instance layers
-	instanceObj.layerExtension.getInstanceLayerProperties();
+	_instanceObj.layerExtension.getInstanceLayerProperties();
 
-	deviceObj = NULL;
-	debugFlag = false;
-	rendererObj = NULL;
-	isPrepared = false;
-	isResizing = false;
+	_deviceObj = nullptr;
+	_debugFlag = false;
+	_rendererObj = nullptr;
+	_isPrepared = false;
+	_isResizing = false;
 }
 
 VulkanApplication::~VulkanApplication()
 {
-	delete rendererObj;
-	rendererObj = NULL;
+	delete _rendererObj;
+	_rendererObj = nullptr;
 }
 
 // Returns the Single ton object of VulkanApplication
-VulkanApplication* VulkanApplication::GetInstance(){
-    std::call_once(onlyOnce, [](){instance.reset(new VulkanApplication()); });
-    return instance.get();
+VulkanApplication* VulkanApplication::GetInstance()
+{
+    std::call_once(_onlyOnce, [](){_instance.reset(new VulkanApplication()); });
+    return _instance.get();
 }
 
-VkResult VulkanApplication::createVulkanInstance( std::vector<const char *>& layers, std::vector<const char *>& extensionNames, const char* applicationName)
+VkResult VulkanApplication::CreateVulkanInstance( std::vector<const char *>& layers, std::vector<const char *>& extensionNames, const char* applicationName)
 {
-	return instanceObj.createInstance(layers, extensionNames, applicationName);
+	return _instanceObj.createInstance(layers, extensionNames, applicationName);
 }
 
 // This function is responsible for creating the logical device.
@@ -76,165 +52,174 @@ VkResult VulkanApplication::createVulkanInstance( std::vector<const char *>& lay
 // 8. Create the logical device, connect it to the graphics queue.
 
 // High level function for creating device and queues
-VkResult VulkanApplication::handShakeWithDevice(VkPhysicalDevice* gpu, std::vector<const char *>& layers, std::vector<const char *>& extensions )
+VkResult VulkanApplication::HandShakeWithDevice(VkPhysicalDevice* gpu, std::vector<const char *>& layers, std::vector<const char *>& extensions )
 {
 
 	// The user define Vulkan Device object this will manage the
 	// Physical and logical device and their queue and properties
-	deviceObj = new VulkanDevice(gpu);
-	if (!deviceObj){
+	_deviceObj = new VulkanDevice(gpu);
+	if (!_deviceObj)
+	{
 		return VK_ERROR_OUT_OF_HOST_MEMORY;
 	}
 	
 	// Print the devices available layer and their extension 
-	deviceObj->layerExtension.getDeviceExtensionProperties(gpu);
+	_deviceObj->layerExtension.getDeviceExtensionProperties(gpu);
 
 	// Get the physical device or GPU properties
-	vkGetPhysicalDeviceProperties(*gpu, &deviceObj->gpuProps);
+	vkGetPhysicalDeviceProperties(*gpu, &_deviceObj->gpuProps);
 
 	// Get the memory properties from the physical device or GPU.
-	vkGetPhysicalDeviceMemoryProperties(*gpu, &deviceObj->memoryProperties);
+	vkGetPhysicalDeviceMemoryProperties(*gpu, &_deviceObj->memoryProperties);
 
 	// Query the availabe queues on the physical device and their properties.
-	deviceObj->getPhysicalDeviceQueuesAndProperties();
+	_deviceObj->getPhysicalDeviceQueuesAndProperties();
 
 	// Retrive the queue which support graphics pipeline.
-	deviceObj->getGraphicsQueueHandle();
+	_deviceObj->getGraphicsQueueHandle();
 
 	// Create Logical Device, ensure that this device is connecte to graphics queue
-	return deviceObj->createDevice(layers, extensions);
+	return _deviceObj->createDevice(layers, extensions);
 }
 
-VkResult VulkanApplication::enumeratePhysicalDevices(std::vector<VkPhysicalDevice>& gpuList)
+VkResult VulkanApplication::EnumeratePhysicalDevices(std::vector<VkPhysicalDevice>& gpuList) const
 {
 	uint32_t gpuDeviceCount;
 
-	VkResult result = vkEnumeratePhysicalDevices(instanceObj.instance, &gpuDeviceCount, NULL);
+	VkResult result = vkEnumeratePhysicalDevices(_instanceObj.instance, &gpuDeviceCount, nullptr);
 	assert(result == VK_SUCCESS);
 
 	assert(gpuDeviceCount);
 
 	gpuList.resize(gpuDeviceCount);
 
-	result = vkEnumeratePhysicalDevices(instanceObj.instance, &gpuDeviceCount, gpuList.data());
+	result = vkEnumeratePhysicalDevices(_instanceObj.instance, &gpuDeviceCount, gpuList.data());
 	assert(result == VK_SUCCESS);
 
 	return result;
 }
 
-void VulkanApplication::initialize()
+void VulkanApplication::Initialize()
 {
 	char title[] = "Hello World!!!";
 
 	// Check if the supplied layer are support or not
-	instanceObj.layerExtension.areLayersSupported(layerNames);
+	_instanceObj.layerExtension.areLayersSupported(layerNames);
 
 	// Create the Vulkan instance with specified layer and extension names.
-	createVulkanInstance(layerNames, instanceExtensionNames, title);
+	CreateVulkanInstance(layerNames, instanceExtensionNames, title);
 
 	// Create the debugging report if debugging is enabled
-	if (debugFlag) {
-		instanceObj.layerExtension.createDebugReportCallback();
+	if (_debugFlag)
+	{
+		_instanceObj.layerExtension.createDebugReportCallback();
 	}
 
 	// Get the list of physical devices on the system
-	enumeratePhysicalDevices(gpuList);
+	const VkResult result = EnumeratePhysicalDevices(_gpuList);
+	assert(result == VK_SUCCESS);
 
 	// This example use only one device which is available first.
-	if (gpuList.size() > 0) {
-		handShakeWithDevice(&gpuList[0], layerNames, deviceExtensionNames);
+	if (!_gpuList.empty()) 
+	{
+		HandShakeWithDevice(&_gpuList[0], layerNames, deviceExtensionNames);
 	}
 
-	if (!rendererObj) {
-		rendererObj = new VulkanRenderer(this, deviceObj);
+	if (!_rendererObj) 
+	{
+		_rendererObj = new VulkanRenderer(this, _deviceObj);
 		// Create an empy window 500x500
-		rendererObj->createPresentationWindow(500, 500);
+		_rendererObj->createPresentationWindow(500, 500);
 		// Initialize swapchain
-		rendererObj->getSwapChain()->intializeSwapChain();
+		_rendererObj->getSwapChain()->intializeSwapChain();
 	}
-	rendererObj->initialize();
+	_rendererObj->initialize();
 }
 
-void VulkanApplication::resize()
+void VulkanApplication::Resize()
 {
 	// If prepared then only proceed for 
-	if (!isPrepared) {
+	if (!_isPrepared) 
+	{
 		return;
 	}
 	
-	isResizing = true;
+	_isResizing = true;
 
-	vkDeviceWaitIdle(deviceObj->device);
-	rendererObj->destroyFramebuffers();
-	rendererObj->destroyCommandPool();
-	rendererObj->destroyPipeline();
-	rendererObj->getPipelineObject()->destroyPipelineCache();
-	for each (VulkanDrawable* drawableObj in *rendererObj->getDrawingItems())
+	vkDeviceWaitIdle(_deviceObj->device);
+	_rendererObj->destroyFramebuffers();
+	_rendererObj->destroyCommandPool();
+	_rendererObj->destroyPipeline();
+	_rendererObj->getPipelineObject()->destroyPipelineCache();
+	for (auto drawableObj : *_rendererObj->getDrawingItems())
 	{
 		drawableObj->destroyDescriptor();
 	}
-	rendererObj->destroyRenderpass();
-	rendererObj->getSwapChain()->destroySwapChain();
-	rendererObj->destroyDrawableVertexBuffer();
-	rendererObj->destroyDrawableUniformBuffer();
-	rendererObj->destroyTextureResource();
-	rendererObj->destroyDepthBuffer();
-	rendererObj->initialize();
-	prepare();
+	_rendererObj->destroyRenderpass();
+	_rendererObj->getSwapChain()->destroySwapChain();
+	_rendererObj->destroyDrawableVertexBuffer();
+	_rendererObj->destroyDrawableUniformBuffer();
+	_rendererObj->destroyTextureResource();
+	_rendererObj->destroyDepthBuffer();
+	_rendererObj->initialize();
+	Prepare();
 
-	isResizing = false;
+	_isResizing = false;
 }
 
-void VulkanApplication::deInitialize()
+void VulkanApplication::DeInitialize()
 {
 	// Destroy all the pipeline objects
-	rendererObj->destroyPipeline();
+	_rendererObj->destroyPipeline();
 
 	// Destroy the associate pipeline cache
-	rendererObj->getPipelineObject()->destroyPipelineCache();
+	_rendererObj->getPipelineObject()->destroyPipelineCache();
 
-	for each (VulkanDrawable* drawableObj in *rendererObj->getDrawingItems())
+	for (VulkanDrawable* drawableObj : *_rendererObj->getDrawingItems())
 	{
 		drawableObj->destroyDescriptor();
 	}
 
-	rendererObj->getShader()->destroyShaders();
-	rendererObj->destroyFramebuffers();
-	rendererObj->destroyRenderpass();
-	rendererObj->destroyDrawableVertexBuffer();
-	rendererObj->destroyDrawableUniformBuffer();
+	_rendererObj->getShader()->destroyShaders();
+	_rendererObj->destroyFramebuffers();
+	_rendererObj->destroyRenderpass();
+	_rendererObj->destroyDrawableVertexBuffer();
+	_rendererObj->destroyDrawableUniformBuffer();
 
-	rendererObj->destroyDrawableCommandBuffer();
-	rendererObj->destroyDepthBuffer();
-	rendererObj->getSwapChain()->destroySwapChain();
-	rendererObj->destroyCommandBuffer();
-	rendererObj->destroyDrawableSynchronizationObjects();
-	rendererObj->destroyCommandPool();
-	rendererObj->destroyPresentationWindow();
-	rendererObj->destroyTextureResource();
-	deviceObj->destroyDevice();
-	if (debugFlag) {
-		instanceObj.layerExtension.destroyDebugReportCallback();
+	_rendererObj->destroyDrawableCommandBuffer();
+	_rendererObj->destroyDepthBuffer();
+	_rendererObj->getSwapChain()->destroySwapChain();
+	_rendererObj->destroyCommandBuffer();
+	_rendererObj->destroyDrawableSynchronizationObjects();
+	_rendererObj->destroyCommandPool();
+	_rendererObj->destroyPresentationWindow();
+	_rendererObj->destroyTextureResource();
+	_deviceObj->destroyDevice();
+	if (_debugFlag) 
+	{
+		_instanceObj.layerExtension.destroyDebugReportCallback();
 	}
-	instanceObj.destroyInstance();
+	_instanceObj.destroyInstance();
 }
 
-void VulkanApplication::prepare()
+void VulkanApplication::Prepare()
 {
-	isPrepared = false;
-	rendererObj->prepare();
-	isPrepared = true;
+	_isPrepared = false;
+	_rendererObj->prepare();
+	_isPrepared = true;
 }
 
-void VulkanApplication::update()
+void VulkanApplication::Update() const
 {
-	rendererObj->update();
+	_rendererObj->update();
 }
 
-bool VulkanApplication::render() 
+bool VulkanApplication::Render() const
 {
-	if (!isPrepared)
+	if (!_isPrepared)
+	{
 		return false;
+	}
 
-	return rendererObj->render();
+	return _rendererObj->render();
 }
