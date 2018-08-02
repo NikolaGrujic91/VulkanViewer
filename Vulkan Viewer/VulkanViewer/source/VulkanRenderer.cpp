@@ -3,19 +3,18 @@
 #include "Wrappers.h"
 #include "MeshData.h"
 
-VulkanRenderer::VulkanRenderer(VulkanApplication * app, VulkanDevice* deviceObject) :
-    _shaderObj(&deviceObject->_device)
+VulkanRenderer::VulkanRenderer(VulkanApplication * app, VulkanDevice* deviceObject)
 {
-    // Note: It's very important to initilize the member with 0 or respective value other wise it will break the system
-    memset(&_depth, 0, sizeof(_depth));
-    memset(&_connection, 0, sizeof(HINSTANCE));				// hInstance - Windows Instance
+	// Note: It's very important to initilize the member with 0 or respective value other wise it will break the system
+	memset(&_depth, 0, sizeof(_depth));
+	memset(&_connection, 0, sizeof(HINSTANCE));				// hInstance - Windows Instance
 
-    _application = app;
-    _deviceObj   = deviceObject;
+	_application = app;
+	_deviceObj	= deviceObject;
 
-    _swapChainObj = new VulkanSwapChain(this);
+	_swapChainObj = new VulkanSwapChain(this);
     auto* drawableObj = new VulkanDrawable(this);
-    _drawableList.push_back(drawableObj);
+	_drawableList.push_back(drawableObj);
 }
 
 VulkanRenderer::~VulkanRenderer()
