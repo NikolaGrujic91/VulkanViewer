@@ -178,7 +178,7 @@ bool VulkanPipeline::createPipeline(VulkanDrawable* drawableObj, VkPipeline* pip
 	VkGraphicsPipelineCreateInfo pipelineInfo = {};
 	pipelineInfo.sType					= VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 	pipelineInfo.pNext					= NULL;
-	pipelineInfo.layout					= drawableObj->pipelineLayout;
+	pipelineInfo.layout					= drawableObj->_pipelineLayout;
 	pipelineInfo.basePipelineHandle		= 0;
 	pipelineInfo.basePipelineIndex		= 0;
 	pipelineInfo.flags					= 0;

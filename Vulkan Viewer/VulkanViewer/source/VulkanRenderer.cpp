@@ -1066,10 +1066,10 @@ void VulkanRenderer::createDescriptors()
 		// It is upto an application how it manages the 
 		// creation of descriptor. Descriptors can be cached 
 		// and reuse for all similar objects.
-		drawableObj->createDescriptorSetLayout(true);
+		drawableObj->CreateDescriptorSetLayout(true);
 
 		// Create the descriptor set
-		drawableObj->createDescriptor(true);
+		drawableObj->CreateDescriptor(true);
 	}
 
 }
@@ -1079,7 +1079,7 @@ void VulkanRenderer::createPipelineStateManagement()
 	for each (VulkanDrawable* drawableObj in drawableList)
 	{
 		// Use the descriptor layout and create the pipeline layout.
-		drawableObj->createPipelineLayout();
+		drawableObj->CreatePipelineLayout();
 	}
 
 	pipelineObj.createPipelineCache();

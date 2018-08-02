@@ -44,11 +44,11 @@ public:
 	VkPipeline* getPipeline() { return pipeline; }
 
 	void createUniformBuffer();
-	void createDescriptorPool(bool useTexture);
-	void createDescriptorResources();
-	void createDescriptorSet(bool useTexture);
-	void createDescriptorSetLayout(bool useTexture);
-	void createPipelineLayout();
+	void CreateDescriptorPool(bool useTexture);
+	void CreateDescriptorResources();
+	void CreateDescriptorSet(bool useTexture);
+	void CreateDescriptorSetLayout(bool useTexture);
+	void CreatePipelineLayout();
 
 	void initViewports(VkCommandBuffer* cmd);
 	void initScissors(VkCommandBuffer* cmd);

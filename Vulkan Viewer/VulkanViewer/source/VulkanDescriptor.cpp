@@ -1,81 +1,59 @@
-/*
-* Learning Vulkan - ISBN: 9781786469809
-*
-* Author: Parminder Singh, parminder.vulkan@gmail.com
-* Linkedin: https://www.linkedin.com/in/parmindersingh18
-*
-* Permission is hereby granted, free of charge, to any person obtaining a
-* copy of this software and associated documentation files (the "Software"),
-* to deal in the Software without restriction, including without limitation
-* the rights to use, copy, modify, merge, publish, distribute, sublicense,
-* and/or sell copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-* DEALINGS IN THE SOFTWARE.
-*/
-
 #include "VulkanDescriptor.h"
 #include "VulkanApplication.h"
 #include "VulkanDevice.h"
 
-VulkanDescriptor::VulkanDescriptor()
+VulkanDescriptor::VulkanDescriptor() :
+	_pipelineLayout(0),
+	_descriptorPool(0)
 {
-	deviceObj = VulkanApplication::GetInstance()->_deviceObj;
+	_deviceObj = VulkanApplication::GetInstance()->_deviceObj;
 }
 
 VulkanDescriptor::~VulkanDescriptor()
 {
 }
 
-void VulkanDescriptor::createDescriptor(bool useTexture)
+void VulkanDescriptor::CreateDescriptor(bool useTexture)
 {
 	// Create the uniform buffer resource 
-	createDescriptorResources();
+	CreateDescriptorResources();
 	
 	// Create the descriptor pool and 
 	// use it for descriptor set allocation
-	createDescriptorPool(useTexture);
+	CreateDescriptorPool(useTexture);
 
 	// Create descriptor set with uniform buffer data in it
-	createDescriptorSet(useTexture);
+	CreateDescriptorSet(useTexture);
 }
 
-void VulkanDescriptor::destroyDescriptor()
+void VulkanDescriptor::DestroyDescriptor()
 {
-	destroyDescriptorLayout();
-	destroyPipelineLayouts();
-	destroyDescriptorSet();
-	destroyDescriptorPool();
+	DestroyDescriptorLayout();
+	DestroyPipelineLayouts();
+	DestroyDescriptorSet();
+	DestroyDescriptorPool();
 }
 
-void VulkanDescriptor::destroyDescriptorLayout()
+void VulkanDescriptor::DestroyDescriptorLayout()
 {
-	for (int i = 0; i < descLayout.size(); i++) {
-		vkDestroyDescriptorSetLayout(deviceObj->device, descLayout[i], NULL);
+	for (auto i : _descLayout)
+	{
+		vkDestroyDescriptorSetLayout(_deviceObj->device, i, nullptr);
 	}
-	descLayout.clear();
+	_descLayout.clear();
 }
 
-void VulkanDescriptor::destroyPipelineLayouts()
+void VulkanDescriptor::DestroyPipelineLayouts() const
 {
-	vkDestroyPipelineLayout(deviceObj->device, pipelineLayout, NULL);
+	vkDestroyPipelineLayout(_deviceObj->device, _pipelineLayout, nullptr);
 }
 
-void VulkanDescriptor::destroyDescriptorPool()
+void VulkanDescriptor::DestroyDescriptorPool() const
 {
-	vkDestroyDescriptorPool(deviceObj->device, descriptorPool, NULL);
+	vkDestroyDescriptorPool(_deviceObj->device, _descriptorPool, nullptr);
 }
 
-void VulkanDescriptor::destroyDescriptorSet()
+void VulkanDescriptor::DestroyDescriptorSet()
 {
-	vkFreeDescriptorSets(deviceObj->device, descriptorPool, (uint32_t)descriptorSet.size(), &descriptorSet[0]);
+	vkFreeDescriptorSets(_deviceObj->device, _descriptorPool, static_cast<uint32_t>(_descriptorSet.size()), &_descriptorSet[0]);
 }

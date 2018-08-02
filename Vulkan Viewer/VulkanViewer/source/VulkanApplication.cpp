@@ -153,7 +153,7 @@ void VulkanApplication::Resize()
 	_rendererObj->getPipelineObject()->destroyPipelineCache();
 	for (auto drawableObj : *_rendererObj->getDrawingItems())
 	{
-		drawableObj->destroyDescriptor();
+		drawableObj->DestroyDescriptor();
 	}
 	_rendererObj->destroyRenderpass();
 	_rendererObj->getSwapChain()->destroySwapChain();
@@ -177,7 +177,7 @@ void VulkanApplication::DeInitialize()
 
 	for (VulkanDrawable* drawableObj : *_rendererObj->getDrawingItems())
 	{
-		drawableObj->destroyDescriptor();
+		drawableObj->DestroyDescriptor();
 	}
 
 	_rendererObj->getShader()->destroyShaders();
