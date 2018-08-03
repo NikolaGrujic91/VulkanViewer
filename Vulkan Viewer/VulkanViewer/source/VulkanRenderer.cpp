@@ -3,17 +3,18 @@
 #include "Wrappers.h"
 #include "MeshData.h"
 
-VulkanRenderer::VulkanRenderer(VulkanApplication * app, VulkanDevice* deviceObject)
+VulkanRenderer::VulkanRenderer(VulkanApplication * app, VulkanDevice* deviceObject) :
+	_pipelineObj(&deviceObject->_device, &_renderPass)
 {
 	// Note: It's very important to initilize the member with 0 or respective value other wise it will break the system
 	memset(&_depth, 0, sizeof(_depth));
 	memset(&_connection, 0, sizeof(HINSTANCE));				// hInstance - Windows Instance
 
 	_application = app;
-	_deviceObj	= deviceObject;
+	_deviceObj = deviceObject;
 
 	_swapChainObj = new VulkanSwapChain(this);
-    auto* drawableObj = new VulkanDrawable(this);
+	auto* drawableObj = new VulkanDrawable(this);
 	_drawableList.push_back(drawableObj);
 }
 

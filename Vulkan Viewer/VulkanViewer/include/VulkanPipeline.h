@@ -2,8 +2,6 @@
 #include "Headers.h"
 class VulkanShader;
 class VulkanDrawable;
-class VulkanDevice;
-class VulkanApplication;
 
 // While creating the pipeline the number of viewports and number 
 // of scissors.                 
@@ -13,7 +11,7 @@ class VulkanApplication;
 class VulkanPipeline
 {
 public:
-	VulkanPipeline();
+	VulkanPipeline(VkDevice* device, VkRenderPass* renderPass);
 
 	~VulkanPipeline();
 	
@@ -29,9 +27,8 @@ public:
 	// Destruct the pipeline cache object
 	void DestroyPipelineCache();
 
-	// Pipeline preparation member variables
-	// Pipeline cache object
-	VkPipelineCache	   _pipelineCache;
-	VulkanApplication* _appObj;
-	VulkanDevice*	   _deviceObj;
+private:
+	VkPipelineCache _pipelineCache;
+	VkDevice*       _device;
+	VkRenderPass*   _renderPass;
 };
