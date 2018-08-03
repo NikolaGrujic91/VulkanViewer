@@ -86,7 +86,7 @@ void VulkanRenderer::initialize()
 	// Set the created texture in the drawable object.
 	for each (VulkanDrawable* drawableObj in drawableList)
 	{
-		drawableObj->setTextures(&texture);
+		drawableObj->SetTextures(&texture);
 	}
 
 	// Create descriptor set layout
@@ -100,7 +100,7 @@ void VulkanRenderer::prepare()
 {
 	for each (VulkanDrawable* drawableObj in drawableList)
 	{
-		drawableObj->prepare();
+		drawableObj->Prepare();
 	}
 }
 
@@ -108,7 +108,7 @@ void VulkanRenderer::update()
 {
 	for each (VulkanDrawable* drawableObj in drawableList)
 	{
-		drawableObj->update();
+		drawableObj->Update();
 	}
 }
 
@@ -139,7 +139,7 @@ LRESULT CALLBACK VulkanRenderer::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 	case WM_PAINT:
 		for each (VulkanDrawable* drawableObj in appObj->_rendererObj->drawableList)
 		{
-			drawableObj->render();
+			drawableObj->Render();
 		}
 
 		return 0;
@@ -835,7 +835,7 @@ void VulkanRenderer::createTextureLinear(const char* filename, TextureData *text
 	// Set the created texture in the drawable object.
 	for each (VulkanDrawable* drawableObj in drawableList)
 	{
-		drawableObj->setTextures(texture);
+		drawableObj->SetTextures(texture);
 	}
 }
 
@@ -956,7 +956,7 @@ void VulkanRenderer::destroyDrawableVertexBuffer()
 {
 	for each (VulkanDrawable* drawableObj in drawableList)
 	{
-		drawableObj->destroyVertexBuffer();
+		drawableObj->DestroyVertexBuffer();
 	}
 }
 
@@ -964,7 +964,7 @@ void VulkanRenderer::destroyDrawableUniformBuffer()
 {
 	for each (VulkanDrawable* drawableObj in drawableList)
 	{
-		drawableObj->destroyUniformBuffer();
+		drawableObj->DestroyUniformBuffer();
 	}
 }
 
@@ -980,7 +980,7 @@ void VulkanRenderer::destroyDrawableCommandBuffer()
 {
 	for each (VulkanDrawable* drawableObj in drawableList)
 	{
-		drawableObj->destroyCommandBuffer();
+		drawableObj->DestroyCommandBuffer();
 	}
 }
 
@@ -988,7 +988,7 @@ void VulkanRenderer::destroyDrawableSynchronizationObjects()
 {
 	for each (VulkanDrawable* drawableObj in drawableList)
 	{
-		drawableObj->destroySynchronizationObjects();
+		drawableObj->DestroySynchronizationObjects();
 	}
 }
 
@@ -1031,7 +1031,7 @@ void VulkanRenderer::createVertexBuffer()
 
 	for each (VulkanDrawable* drawableObj in drawableList)
 	{
-		drawableObj->createVertexBuffer(geometryData, sizeof(geometryData), sizeof(geometryData[0]), false);
+		drawableObj->CreateVertexBuffer(geometryData, sizeof(geometryData), sizeof(geometryData[0]), false);
 	}
 	CommandBufferMgr::endCommandBuffer(cmdVertexBuffer);
 	CommandBufferMgr::submitCommandBuffer(deviceObj->_queue, &cmdVertexBuffer);
@@ -1091,7 +1091,7 @@ void VulkanRenderer::createPipelineStateManagement()
 		if (pipelineObj.createPipeline(drawableObj, pipeline, &shaderObj, depthPresent))
 		{
 			pipelineList.push_back(pipeline);
-			drawableObj->setPipeline(pipeline);
+			drawableObj->SetPipeline(pipeline);
 		}
 		else
 		{

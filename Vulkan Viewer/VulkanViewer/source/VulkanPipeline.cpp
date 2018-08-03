@@ -73,10 +73,10 @@ bool VulkanPipeline::createPipeline(VulkanDrawable* drawableObj, VkPipeline* pip
 	vertexInputStateInfo.flags							= 0;
 	if(includeVi)
 	{
-		vertexInputStateInfo.vertexBindingDescriptionCount	= sizeof(drawableObj->viIpBind) / sizeof(VkVertexInputBindingDescription);
-		vertexInputStateInfo.pVertexBindingDescriptions		= &drawableObj->viIpBind;
-		vertexInputStateInfo.vertexAttributeDescriptionCount = sizeof(drawableObj->viIpAttrb)/sizeof(VkVertexInputAttributeDescription);
-		vertexInputStateInfo.pVertexAttributeDescriptions	= drawableObj->viIpAttrb;
+		vertexInputStateInfo.vertexBindingDescriptionCount	= sizeof(drawableObj->_viIpBind) / sizeof(VkVertexInputBindingDescription);
+		vertexInputStateInfo.pVertexBindingDescriptions		= &drawableObj->_viIpBind;
+		vertexInputStateInfo.vertexAttributeDescriptionCount = sizeof(drawableObj->_viIpAttrb)/sizeof(VkVertexInputAttributeDescription);
+		vertexInputStateInfo.pVertexAttributeDescriptions	= drawableObj->_viIpAttrb;
 	}
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo = {};
 	inputAssemblyInfo.sType						= VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
