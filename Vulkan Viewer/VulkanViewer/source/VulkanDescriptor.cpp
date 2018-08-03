@@ -38,22 +38,22 @@ void VulkanDescriptor::DestroyDescriptorLayout()
 {
 	for (auto i : _descLayout)
 	{
-		vkDestroyDescriptorSetLayout(_deviceObj->device, i, nullptr);
+		vkDestroyDescriptorSetLayout(_deviceObj->_device, i, nullptr);
 	}
 	_descLayout.clear();
 }
 
 void VulkanDescriptor::DestroyPipelineLayouts() const
 {
-	vkDestroyPipelineLayout(_deviceObj->device, _pipelineLayout, nullptr);
+	vkDestroyPipelineLayout(_deviceObj->_device, _pipelineLayout, nullptr);
 }
 
 void VulkanDescriptor::DestroyDescriptorPool() const
 {
-	vkDestroyDescriptorPool(_deviceObj->device, _descriptorPool, nullptr);
+	vkDestroyDescriptorPool(_deviceObj->_device, _descriptorPool, nullptr);
 }
 
 void VulkanDescriptor::DestroyDescriptorSet()
 {
-	vkFreeDescriptorSets(_deviceObj->device, _descriptorPool, static_cast<uint32_t>(_descriptorSet.size()), &_descriptorSet[0]);
+	vkFreeDescriptorSets(_deviceObj->_device, _descriptorPool, static_cast<uint32_t>(_descriptorSet.size()), &_descriptorSet[0]);
 }

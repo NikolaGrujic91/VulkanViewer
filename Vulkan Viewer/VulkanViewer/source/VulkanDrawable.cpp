@@ -45,8 +45,8 @@ VulkanDrawable::VulkanDrawable(VulkanRenderer* parent) {
 
 	VulkanDevice* deviceObj = VulkanApplication::GetInstance()->_deviceObj;
 
-	vkCreateSemaphore(deviceObj->device, &presentCompleteSemaphoreCreateInfo, NULL, &presentCompleteSemaphore);
-	vkCreateSemaphore(deviceObj->device, &drawingCompleteSemaphoreCreateInfo, NULL, &drawingCompleteSemaphore);
+	vkCreateSemaphore(deviceObj->_device, &presentCompleteSemaphoreCreateInfo, NULL, &presentCompleteSemaphore);
+	vkCreateSemaphore(deviceObj->_device, &drawingCompleteSemaphoreCreateInfo, NULL, &drawingCompleteSemaphore);
 }
 
 VulkanDrawable::~VulkanDrawable()
@@ -56,14 +56,14 @@ VulkanDrawable::~VulkanDrawable()
 void VulkanDrawable::destroyCommandBuffer()
 {
 	for (int i = 0; i<vecCmdDraw.size(); i++) {
-		vkFreeCommandBuffers(_deviceObj->device, rendererObj->cmdPool, 1, &vecCmdDraw[i]);
+		vkFreeCommandBuffers(_deviceObj->_device, rendererObj->cmdPool, 1, &vecCmdDraw[i]);
 	}
 }
 
 void VulkanDrawable::destroySynchronizationObjects()
 {
-	vkDestroySemaphore(_deviceObj->device, presentCompleteSemaphore, NULL);
-	vkDestroySemaphore(_deviceObj->device, drawingCompleteSemaphore, NULL);
+	vkDestroySemaphore(_deviceObj->_device, presentCompleteSemaphore, NULL);
+	vkDestroySemaphore(_deviceObj->_device, drawingCompleteSemaphore, NULL);
 }
 
 void VulkanDrawable::createUniformBuffer()
@@ -91,12 +91,12 @@ void VulkanDrawable::createUniformBuffer()
 	bufInfo.flags					= 0;
 
 	// Use create buffer info and create the buffer objects
-	result = vkCreateBuffer(_deviceObj->device, &bufInfo, NULL, &UniformData.buffer);
+	result = vkCreateBuffer(_deviceObj->_device, &bufInfo, NULL, &UniformData.buffer);
 	assert(result == VK_SUCCESS);
 
 	// Get the buffer memory requirements
 	VkMemoryRequirements memRqrmnt;
-	vkGetBufferMemoryRequirements(_deviceObj->device, UniformData.buffer, &memRqrmnt);
+	vkGetBufferMemoryRequirements(_deviceObj->_device, UniformData.buffer, &memRqrmnt);
 
 	VkMemoryAllocateInfo memAllocInfo = {};
 	memAllocInfo.sType				= VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -106,15 +106,15 @@ void VulkanDrawable::createUniformBuffer()
 
 	// Determine the type of memory required 
 	// with the help of memory properties
-	pass = _deviceObj->memoryTypeFromProperties(memRqrmnt.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, &memAllocInfo.memoryTypeIndex);
+	pass = _deviceObj->MemoryTypeFromProperties(memRqrmnt.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, &memAllocInfo.memoryTypeIndex);
 	assert(pass);
 
 	// Allocate the memory for buffer objects
-	result = vkAllocateMemory(_deviceObj->device, &memAllocInfo, NULL, &(UniformData.memory));
+	result = vkAllocateMemory(_deviceObj->_device, &memAllocInfo, NULL, &(UniformData.memory));
 	assert(result == VK_SUCCESS);
 
 	// Map the GPU memory on to local host
-	result = vkMapMemory(_deviceObj->device, UniformData.memory, 0, memRqrmnt.size, 0, (void **)&UniformData.pData);
+	result = vkMapMemory(_deviceObj->_device, UniformData.memory, 0, memRqrmnt.size, 0, (void **)&UniformData.pData);
 	assert(result == VK_SUCCESS);
 
 	// Copy computed data in the mapped buffer
@@ -133,10 +133,10 @@ void VulkanDrawable::createUniformBuffer()
 	// If the memory property is set with VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 	// then the driver may take care of this, otherwise for non-coherent 
 	// mapped memory vkInvalidateMappedMemoryRanges() needs to be called explicitly.
-	vkInvalidateMappedMemoryRanges(_deviceObj->device, 1, &UniformData.mappedRange[0]);
+	vkInvalidateMappedMemoryRanges(_deviceObj->_device, 1, &UniformData.mappedRange[0]);
 
 	// Bind the buffer device memory 
-	result = vkBindBufferMemory(_deviceObj->device,	UniformData.buffer, UniformData.memory, 0);
+	result = vkBindBufferMemory(_deviceObj->_device,	UniformData.buffer, UniformData.memory, 0);
 	assert(result == VK_SUCCESS);
 
 	// Update the local data structure with uniform buffer for house keeping
@@ -166,12 +166,12 @@ void VulkanDrawable::createVertexBuffer(const void *vertexData, uint32_t dataSiz
 	bufInfo.flags					= 0;
 
 	// Create the Buffer resource
-	result = vkCreateBuffer(deviceObj->device, &bufInfo, NULL, &VertexBuffer.buf);
+	result = vkCreateBuffer(deviceObj->_device, &bufInfo, NULL, &VertexBuffer.buf);
 	assert(result == VK_SUCCESS);
 
 	// Get the Buffer resource requirements
 	VkMemoryRequirements memRqrmnt;
-	vkGetBufferMemoryRequirements(deviceObj->device, VertexBuffer.buf, &memRqrmnt);
+	vkGetBufferMemoryRequirements(deviceObj->_device, VertexBuffer.buf, &memRqrmnt);
 
 	// Create memory allocation metadata information
 	VkMemoryAllocateInfo allocInfo = {};
@@ -181,29 +181,29 @@ void VulkanDrawable::createVertexBuffer(const void *vertexData, uint32_t dataSiz
 	allocInfo.allocationSize	= memRqrmnt.size;
 
 	// Get the compatible type of memory
-	pass = deviceObj->memoryTypeFromProperties(memRqrmnt.memoryTypeBits,
+	pass = deviceObj->MemoryTypeFromProperties(memRqrmnt.memoryTypeBits,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &allocInfo.memoryTypeIndex);
 	assert(pass);
 
 	// Allocate the physical backing for buffer resource
-	result = vkAllocateMemory(deviceObj->device, &allocInfo, NULL, &(VertexBuffer.mem));
+	result = vkAllocateMemory(deviceObj->_device, &allocInfo, NULL, &(VertexBuffer.mem));
 	assert(result == VK_SUCCESS);
 	VertexBuffer.bufferInfo.range	= memRqrmnt.size;
 	VertexBuffer.bufferInfo.offset	= 0;
 
 	// Map the physical device memory region to the host 
 	uint8_t *pData;
-	result = vkMapMemory(deviceObj->device, VertexBuffer.mem, 0, memRqrmnt.size, 0, (void **)&pData);
+	result = vkMapMemory(deviceObj->_device, VertexBuffer.mem, 0, memRqrmnt.size, 0, (void **)&pData);
 	assert(result == VK_SUCCESS);
 
 	// Copy the data in the mapped memory
 	memcpy(pData, vertexData, dataSize);
 
 	// Unmap the device memory
-	vkUnmapMemory(deviceObj->device, VertexBuffer.mem);
+	vkUnmapMemory(deviceObj->_device, VertexBuffer.mem);
 
 	// Bind the allocated buffer resource to the device memory
-	result = vkBindBufferMemory(deviceObj->device, VertexBuffer.buf, VertexBuffer.mem, 0);
+	result = vkBindBufferMemory(deviceObj->_device, VertexBuffer.buf, VertexBuffer.mem, 0);
 	assert(result == VK_SUCCESS);
 
 	// Once the buffer resource is implemented, its binding points are 
@@ -256,7 +256,7 @@ void VulkanDrawable::CreateDescriptorPool(bool useTexture)
 	
 	// Create the descriptor pool using the descriptor 
 	// pool create info structure
-	result = vkCreateDescriptorPool(_deviceObj->device,	&descriptorPoolCreateInfo, NULL, &_descriptorPool);
+	result = vkCreateDescriptorPool(_deviceObj->_device,	&descriptorPoolCreateInfo, NULL, &_descriptorPool);
 	assert(result == VK_SUCCESS);
 }
 
@@ -287,7 +287,7 @@ void VulkanDrawable::CreateDescriptorSet(bool useTexture)
 	_descriptorSet.resize(1);
 
 	// Allocate descriptor sets
-	result = vkAllocateDescriptorSets(_deviceObj->device, dsAllocInfo, _descriptorSet.data());
+	result = vkAllocateDescriptorSets(_deviceObj->_device, dsAllocInfo, _descriptorSet.data());
 	assert(result == VK_SUCCESS);
 
 	// Allocate two write descriptors for - 1. MVP and 2. Texture
@@ -320,7 +320,7 @@ void VulkanDrawable::CreateDescriptorSet(bool useTexture)
 	}
 
 	// Update the uniform buffer into the allocated descriptor set
-	vkUpdateDescriptorSets(_deviceObj->device, useTexture ? 2 : 1, writes, 0, NULL);
+	vkUpdateDescriptorSets(_deviceObj->_device, useTexture ? 2 : 1, writes, 0, NULL);
 }
 
 void VulkanDrawable::initViewports(VkCommandBuffer* cmd)
@@ -345,15 +345,15 @@ void VulkanDrawable::initScissors(VkCommandBuffer* cmd)
 
 void VulkanDrawable::destroyVertexBuffer()
 {
-	vkDestroyBuffer(rendererObj->getDevice()->device, VertexBuffer.buf, NULL);
-	vkFreeMemory(rendererObj->getDevice()->device, VertexBuffer.mem, NULL);
+	vkDestroyBuffer(rendererObj->getDevice()->_device, VertexBuffer.buf, NULL);
+	vkFreeMemory(rendererObj->getDevice()->_device, VertexBuffer.mem, NULL);
 }
 
 void VulkanDrawable::destroyUniformBuffer()
 {
-	vkUnmapMemory(_deviceObj->device, UniformData.memory);
-	vkDestroyBuffer(rendererObj->getDevice()->device, UniformData.buffer, NULL);
-	vkFreeMemory(rendererObj->getDevice()->device, UniformData.memory, NULL);
+	vkUnmapMemory(_deviceObj->_device, UniformData.memory);
+	vkDestroyBuffer(rendererObj->getDevice()->_device, UniformData.buffer, NULL);
+	vkFreeMemory(rendererObj->getDevice()->_device, UniformData.memory, NULL);
 }
 
 void VulkanDrawable::setTextures(TextureData * tex)
@@ -422,7 +422,7 @@ void VulkanDrawable::prepare()
 	// allocate the corresponding command buffer
 	for (int i = 0; i < rendererObj->getSwapChain()->scPublicVars.colorBuffer.size(); i++){
 		// Allocate, create and start command buffer recording
-		CommandBufferMgr::allocCommandBuffer(&deviceObj->device, *rendererObj->getCommandPool(), &vecCmdDraw[i]);
+		CommandBufferMgr::allocCommandBuffer(&deviceObj->_device, *rendererObj->getCommandPool(), &vecCmdDraw[i]);
 		CommandBufferMgr::beginCommandBuffer(vecCmdDraw[i]);
 
 		// Create the render pass instance 
@@ -454,7 +454,7 @@ void VulkanDrawable::update()
 	// If the memory property is set with VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 	// then the driver may take care of this, otherwise for non-coherent 
 	// mapped memory vkInvalidateMappedMemoryRanges() needs to be called explicitly.
-	VkResult res = vkInvalidateMappedMemoryRanges(deviceObj->device, 1, &UniformData.mappedRange[0]);
+	VkResult res = vkInvalidateMappedMemoryRanges(deviceObj->_device, 1, &UniformData.mappedRange[0]);
 	assert(res == VK_SUCCESS);
 
 	// Copy updated data into the mapped memory
@@ -465,7 +465,7 @@ void VulkanDrawable::update()
 	// then the driver may take care of this, otherwise for non-coherent 
 	// mapped memory vkFlushMappedMemoryRanges() needs to be called explicitly to flush out 
 	// the pending writes on the host side.
-	res = vkFlushMappedMemoryRanges(deviceObj->device, 1, &UniformData.mappedRange[0]);
+	res = vkFlushMappedMemoryRanges(deviceObj->_device, 1, &UniformData.mappedRange[0]);
 	assert(res == VK_SUCCESS);
 
 }
@@ -481,7 +481,7 @@ void VulkanDrawable::render()
 	VkFence nullFence = VK_NULL_HANDLE;
 	
 	// Get the index of the next available swapchain image:
-	VkResult result = swapChainObj->fpAcquireNextImageKHR(deviceObj->device, swapChain,
+	VkResult result = swapChainObj->fpAcquireNextImageKHR(deviceObj->_device, swapChain,
 		UINT64_MAX, presentCompleteSemaphore, VK_NULL_HANDLE, &currentColorImage);
 
 	VkPipelineStageFlags submitPipelineStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -498,7 +498,7 @@ void VulkanDrawable::render()
 	submitInfo.pSignalSemaphores	= &drawingCompleteSemaphore;
 
 	// Queue the command buffer for execution
-	CommandBufferMgr::submitCommandBuffer(deviceObj->queue, &vecCmdDraw[currentColorImage], &submitInfo);
+	CommandBufferMgr::submitCommandBuffer(deviceObj->_queue, &vecCmdDraw[currentColorImage], &submitInfo);
 
 	// Present the image in the window
 	VkPresentInfoKHR present = {};
@@ -512,7 +512,7 @@ void VulkanDrawable::render()
 	present.pResults			= NULL;
 
 	// Queue the image for presentation,
-	result = swapChainObj->fpQueuePresentKHR(deviceObj->queue, &present);
+	result = swapChainObj->fpQueuePresentKHR(deviceObj->_queue, &present);
 	assert(result == VK_SUCCESS);
 }
 
@@ -549,7 +549,7 @@ void VulkanDrawable::CreateDescriptorSetLayout(bool useTexture)
 	// Allocate required number of descriptor layout objects and  
 	// create them using vkCreateDescriptorSetLayout()
 	_descLayout.resize(1);
-	result = vkCreateDescriptorSetLayout(_deviceObj->device, &descriptorLayout, NULL, _descLayout.data());
+	result = vkCreateDescriptorSetLayout(_deviceObj->_device, &descriptorLayout, NULL, _descLayout.data());
 	assert(result == VK_SUCCESS);
 }
 
@@ -570,6 +570,6 @@ void VulkanDrawable::CreatePipelineLayout()
 	pPipelineLayoutCreateInfo.pSetLayouts				= _descLayout.data();
 
 	VkResult  result;
-	result = vkCreatePipelineLayout(_deviceObj->device, &pPipelineLayoutCreateInfo, NULL, &_pipelineLayout);
+	result = vkCreatePipelineLayout(_deviceObj->_device, &pPipelineLayoutCreateInfo, NULL, &_pipelineLayout);
 	assert(result == VK_SUCCESS);
 }

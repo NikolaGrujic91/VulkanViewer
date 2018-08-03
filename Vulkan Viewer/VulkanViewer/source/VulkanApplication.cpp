@@ -64,22 +64,22 @@ VkResult VulkanApplication::HandShakeWithDevice(VkPhysicalDevice* gpu, std::vect
 	}
 	
 	// Print the devices available layer and their extension 
-	_deviceObj->layerExtension.getDeviceExtensionProperties(gpu);
+	_deviceObj->_layerExtension.getDeviceExtensionProperties(gpu);
 
 	// Get the physical device or GPU properties
-	vkGetPhysicalDeviceProperties(*gpu, &_deviceObj->gpuProps);
+	vkGetPhysicalDeviceProperties(*gpu, &_deviceObj->_gpuProps);
 
 	// Get the memory properties from the physical device or GPU.
-	vkGetPhysicalDeviceMemoryProperties(*gpu, &_deviceObj->memoryProperties);
+	vkGetPhysicalDeviceMemoryProperties(*gpu, &_deviceObj->_memoryProperties);
 
 	// Query the availabe queues on the physical device and their properties.
-	_deviceObj->getPhysicalDeviceQueuesAndProperties();
+	_deviceObj->GetPhysicalDeviceQueuesAndProperties();
 
 	// Retrive the queue which support graphics pipeline.
-	_deviceObj->getGraphicsQueueHandle();
+	_deviceObj->GetGraphicsQueueHandle();
 
 	// Create Logical Device, ensure that this device is connecte to graphics queue
-	return _deviceObj->createDevice(layers, extensions);
+	return _deviceObj->CreateDevice(layers, extensions);
 }
 
 VkResult VulkanApplication::EnumeratePhysicalDevices(std::vector<VkPhysicalDevice>& gpuList) const
@@ -146,7 +146,7 @@ void VulkanApplication::Resize()
 	
 	_isResizing = true;
 
-	vkDeviceWaitIdle(_deviceObj->device);
+	vkDeviceWaitIdle(_deviceObj->_device);
 	_rendererObj->destroyFramebuffers();
 	_rendererObj->destroyCommandPool();
 	_rendererObj->destroyPipeline();
@@ -194,7 +194,7 @@ void VulkanApplication::DeInitialize()
 	_rendererObj->destroyCommandPool();
 	_rendererObj->destroyPresentationWindow();
 	_rendererObj->destroyTextureResource();
-	_deviceObj->destroyDevice();
+	_deviceObj->DestroyDevice();
 	if (_debugFlag) 
 	{
 		_instanceObj.layerExtension.destroyDebugReportCallback();

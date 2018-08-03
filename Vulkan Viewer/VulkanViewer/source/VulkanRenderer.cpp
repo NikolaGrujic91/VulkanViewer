@@ -299,10 +299,10 @@ void VulkanRenderer::createCommandPool()
 	VkCommandPoolCreateInfo cmdPoolInfo = {};
 	cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	cmdPoolInfo.pNext = NULL;
-	cmdPoolInfo.queueFamilyIndex = deviceObj->graphicsQueueWithPresentIndex;
+	cmdPoolInfo.queueFamilyIndex = deviceObj->_graphicsQueueWithPresentIndex;
 	cmdPoolInfo.flags = 0;
 
-	res = vkCreateCommandPool(deviceObj->device, &cmdPoolInfo, NULL, &cmdPool);
+	res = vkCreateCommandPool(deviceObj->_device, &cmdPoolInfo, NULL, &cmdPool);
 	assert(res == VK_SUCCESS);
 }
 
@@ -338,12 +338,12 @@ void VulkanRenderer::createDepthImage()
 	imageInfo.flags					= 0;
 
 	// User create image info and create the image objects
-	result = vkCreateImage(deviceObj->device, &imageInfo, NULL, &Depth.image);
+	result = vkCreateImage(deviceObj->_device, &imageInfo, NULL, &Depth.image);
 	assert(result == VK_SUCCESS);
 
 	// Get the image memory requirements
 	VkMemoryRequirements memRqrmnt;
-	vkGetImageMemoryRequirements(deviceObj->device,	Depth.image, &memRqrmnt);
+	vkGetImageMemoryRequirements(deviceObj->_device,	Depth.image, &memRqrmnt);
 
 	VkMemoryAllocateInfo memAlloc = {};
 	memAlloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -352,15 +352,15 @@ void VulkanRenderer::createDepthImage()
 	memAlloc.memoryTypeIndex = 0;
 	memAlloc.allocationSize = memRqrmnt.size;
 	// Determine the type of memory required with the help of memory properties
-	pass = deviceObj->memoryTypeFromProperties(memRqrmnt.memoryTypeBits, 0, /* No requirements */ &memAlloc.memoryTypeIndex);
+	pass = deviceObj->MemoryTypeFromProperties(memRqrmnt.memoryTypeBits, 0, /* No requirements */ &memAlloc.memoryTypeIndex);
 	assert(pass);
 
 	// Allocate the memory for image objects
-	result = vkAllocateMemory(deviceObj->device, &memAlloc, NULL, &Depth.mem);
+	result = vkAllocateMemory(deviceObj->_device, &memAlloc, NULL, &Depth.mem);
 	assert(result == VK_SUCCESS);
 
 	// Bind the allocated memeory
-	result = vkBindImageMemory(deviceObj->device, Depth.image, Depth.mem, 0);
+	result = vkBindImageMemory(deviceObj->_device, Depth.image, Depth.mem, 0);
 	assert(result == VK_SUCCESS);
 
 
@@ -386,7 +386,7 @@ void VulkanRenderer::createDepthImage()
 
 	// Use command buffer to create the depth image. This includes -
 	// Command buffer allocation, recording with begin/end scope and submission.
-	CommandBufferMgr::allocCommandBuffer(&deviceObj->device, cmdPool, &cmdDepthImage);
+	CommandBufferMgr::allocCommandBuffer(&deviceObj->_device, cmdPool, &cmdDepthImage);
 	CommandBufferMgr::beginCommandBuffer(cmdDepthImage);
 	{
 		VkImageSubresourceRange subresourceRange = {};
@@ -402,11 +402,11 @@ void VulkanRenderer::createDepthImage()
 			VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, subresourceRange, cmdDepthImage);
 	}
 	CommandBufferMgr::endCommandBuffer(cmdDepthImage);
-	CommandBufferMgr::submitCommandBuffer(deviceObj->queue, &cmdDepthImage);
+	CommandBufferMgr::submitCommandBuffer(deviceObj->_queue, &cmdDepthImage);
 
 	// Create the image view and allow the application to use the images.
 	imgViewInfo.image = Depth.image;
-	result = vkCreateImageView(deviceObj->device, &imgViewInfo, NULL, &Depth.view);
+	result = vkCreateImageView(deviceObj->_device, &imgViewInfo, NULL, &Depth.view);
 	assert(result == VK_SUCCESS);
 }
 
@@ -434,13 +434,13 @@ void VulkanRenderer::createTextureOptimal(const char* filename, TextureData *tex
 	VkResult error;
 	// Create a buffer resource (host-visible) -
 	VkBuffer buffer;
-	error = vkCreateBuffer(deviceObj->device, &bufferCreateInfo, NULL, &buffer);
+	error = vkCreateBuffer(deviceObj->_device, &bufferCreateInfo, NULL, &buffer);
 	assert(!error);
 	
 	// Get the buffer memory requirements for the staging buffer -
 	VkMemoryRequirements memRqrmnt;
 	VkDeviceMemory	devMemory;
-	vkGetBufferMemoryRequirements(deviceObj->device, buffer, &memRqrmnt);
+	vkGetBufferMemoryRequirements(deviceObj->_device, buffer, &memRqrmnt);
 
 	VkMemoryAllocateInfo memAllocInfo = {};
 	memAllocInfo.sType			= VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -450,23 +450,23 @@ void VulkanRenderer::createTextureOptimal(const char* filename, TextureData *tex
 	memAllocInfo.allocationSize = memRqrmnt.size;
 
 	// Determine the type of memory required for the host-visible buffer  -
-	deviceObj->memoryTypeFromProperties(memRqrmnt.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &memAllocInfo.memoryTypeIndex);
+	deviceObj->MemoryTypeFromProperties(memRqrmnt.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &memAllocInfo.memoryTypeIndex);
 		
 	// Allocate the memory for host-visible buffer objects -
-	error = vkAllocateMemory(deviceObj->device, &memAllocInfo, nullptr, &devMemory);
+	error = vkAllocateMemory(deviceObj->_device, &memAllocInfo, nullptr, &devMemory);
 	assert(!error);
 
 	// Bind the host-visible buffer with allocated device memory -
-	error = vkBindBufferMemory(deviceObj->device, buffer, devMemory, 0);
+	error = vkBindBufferMemory(deviceObj->_device, buffer, devMemory, 0);
 	assert(!error);
 
 	// Populate the raw image data into the device memory -
 	uint8_t *data;
-	error = vkMapMemory(deviceObj->device, devMemory, 0, memRqrmnt.size, 0, (void **)&data);
+	error = vkMapMemory(deviceObj->_device, devMemory, 0, memRqrmnt.size, 0, (void **)&data);
 	assert(!error);
 
 	memcpy(data, image2D.data(), image2D.size());
-	vkUnmapMemory(deviceObj->device, devMemory);
+	vkUnmapMemory(deviceObj->_device, devMemory);
 
 	// Create image info with optimal tiling support (.tiling = VK_IMAGE_TILING_OPTIMAL) -
 	VkImageCreateInfo imageCreateInfo = {};
@@ -491,24 +491,24 @@ void VulkanRenderer::createTextureOptimal(const char* filename, TextureData *tex
 		imageCreateInfo.usage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 	}
 
-	error = vkCreateImage(deviceObj->device, &imageCreateInfo, nullptr, &texture->image);
+	error = vkCreateImage(deviceObj->_device, &imageCreateInfo, nullptr, &texture->image);
 	assert(!error);
 
 	// Get the image memory requirements
-	vkGetImageMemoryRequirements(deviceObj->device, texture->image, &memRqrmnt);
+	vkGetImageMemoryRequirements(deviceObj->_device, texture->image, &memRqrmnt);
 
 	// Set the allocation size equal to the buffer allocation
 	memAllocInfo.allocationSize = memRqrmnt.size;
 
 	// Determine the type of memory required with the help of memory properties
-	deviceObj->memoryTypeFromProperties(memRqrmnt.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &memAllocInfo.memoryTypeIndex);
+	deviceObj->MemoryTypeFromProperties(memRqrmnt.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &memAllocInfo.memoryTypeIndex);
 
 	// Allocate the physical memory on the GPU
-	error = vkAllocateMemory(deviceObj->device, &memAllocInfo, nullptr, &texture->mem);
+	error = vkAllocateMemory(deviceObj->_device, &memAllocInfo, nullptr, &texture->mem);
 	assert(!error);
 
 	// Bound the physical memory with the created image object 
-	error = vkBindImageMemory(deviceObj->device, texture->image, texture->mem, 0);
+	error = vkBindImageMemory(deviceObj->_device, texture->image, texture->mem, 0);
 	assert(!error);
 
 	VkImageSubresourceRange subresourceRange = {};
@@ -519,7 +519,7 @@ void VulkanRenderer::createTextureOptimal(const char* filename, TextureData *tex
 
 	// Use a separate command buffer for texture loading
 	// Start command buffer recording
-	CommandBufferMgr::allocCommandBuffer(&deviceObj->device, cmdPool, &cmdTexture);
+	CommandBufferMgr::allocCommandBuffer(&deviceObj->_device, cmdPool, &cmdTexture);
 	CommandBufferMgr::beginCommandBuffer(cmdTexture);
 
 	// set the image layout to be 
@@ -577,7 +577,7 @@ void VulkanRenderer::createTextureOptimal(const char* filename, TextureData *tex
 	fenceCI.sType				= VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	fenceCI.flags				= 0;
 
-	error = vkCreateFence(deviceObj->device, &fenceCI, nullptr, &fence);
+	error = vkCreateFence(deviceObj->_device, &fenceCI, nullptr, &fence);
 	assert(!error);
 
 	VkSubmitInfo submitInfo			= {};
@@ -586,16 +586,16 @@ void VulkanRenderer::createTextureOptimal(const char* filename, TextureData *tex
 	submitInfo.commandBufferCount	= 1;
 	submitInfo.pCommandBuffers		= &cmdTexture;
 
-	CommandBufferMgr::submitCommandBuffer(deviceObj->queue, &cmdTexture, &submitInfo, fence);
+	CommandBufferMgr::submitCommandBuffer(deviceObj->_queue, &cmdTexture, &submitInfo, fence);
 
-	error = vkWaitForFences(deviceObj->device, 1, &fence, VK_TRUE, 10000000000);
+	error = vkWaitForFences(deviceObj->_device, 1, &fence, VK_TRUE, 10000000000);
 	assert(!error);
 
-	vkDestroyFence(deviceObj->device, fence, nullptr);
+	vkDestroyFence(deviceObj->_device, fence, nullptr);
 
 	// destroy the allocated resoureces
-	vkFreeMemory(deviceObj->device, devMemory, nullptr);
-	vkDestroyBuffer(deviceObj->device, buffer, nullptr);
+	vkFreeMemory(deviceObj->_device, devMemory, nullptr);
+	vkDestroyBuffer(deviceObj->_device, buffer, nullptr);
 
 	///////////////////////////////////////////////////////////////////////////////////////
 
@@ -610,7 +610,7 @@ void VulkanRenderer::createTextureOptimal(const char* filename, TextureData *tex
 	samplerCI.addressModeV				= VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	samplerCI.addressModeW				= VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	samplerCI.mipLodBias				= 0.0f;
-	if (deviceObj->deviceFeatures.samplerAnisotropy == VK_TRUE)
+	if (deviceObj->_deviceFeatures.samplerAnisotropy == VK_TRUE)
 	{
 		samplerCI.anisotropyEnable		= VK_TRUE;
 		samplerCI.maxAnisotropy			= 8;
@@ -626,7 +626,7 @@ void VulkanRenderer::createTextureOptimal(const char* filename, TextureData *tex
 	samplerCI.borderColor				= VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 	samplerCI.unnormalizedCoordinates	= VK_FALSE;
 
-	error = vkCreateSampler(deviceObj->device, &samplerCI, nullptr, &texture->sampler);
+	error = vkCreateSampler(deviceObj->_device, &samplerCI, nullptr, &texture->sampler);
 	assert(!error);
 
 	// Create image view to allow shader to access the texture information -
@@ -643,7 +643,7 @@ void VulkanRenderer::createTextureOptimal(const char* filename, TextureData *tex
 	viewCI.subresourceRange.levelCount	= texture->mipMapLevels; 	// Optimal tiling supports mip map levels very well set it.
 	viewCI.image			= texture->image;
 
-	error = vkCreateImageView(deviceObj->device, &viewCI, NULL, &texture->view);
+	error = vkCreateImageView(deviceObj->_device, &viewCI, NULL, &texture->view);
 	assert(!error);
 
 	// Fill descriptor image info that can be used for setting up descriptor sets
@@ -686,12 +686,12 @@ void VulkanRenderer::createTextureLinear(const char* filename, TextureData *text
 
 	VkResult  error;
 	// Use create image info and create the image objects
-	error = vkCreateImage(deviceObj->device, &imageCreateInfo, NULL, &texture->image);
+	error = vkCreateImage(deviceObj->_device, &imageCreateInfo, NULL, &texture->image);
 	assert(!error);
 
 	// Get the buffer memory requirements
 	VkMemoryRequirements memoryRequirements;
-	vkGetImageMemoryRequirements(deviceObj->device, texture->image, &memoryRequirements);
+	vkGetImageMemoryRequirements(deviceObj->_device, texture->image, &memoryRequirements);
 
 	// Create memory allocation metadata information
 	VkMemoryAllocateInfo& memAlloc	= texture->memoryAlloc;
@@ -702,16 +702,16 @@ void VulkanRenderer::createTextureLinear(const char* filename, TextureData *text
 
 	// Determine the type of memory required 
 	// with the help of memory properties
-	bool pass = deviceObj->memoryTypeFromProperties(memoryRequirements.memoryTypeBits,
+	bool pass = deviceObj->MemoryTypeFromProperties(memoryRequirements.memoryTypeBits,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, &texture->memoryAlloc.memoryTypeIndex);
 	assert(pass);
 
 	// Allocate the memory for buffer objects
-	error = vkAllocateMemory(deviceObj->device, &texture->memoryAlloc, NULL, &(texture->mem));
+	error = vkAllocateMemory(deviceObj->_device, &texture->memoryAlloc, NULL, &(texture->mem));
 	assert(!error);
 
 	// Bind the image device memory 
-	error = vkBindImageMemory(deviceObj->device, texture->image, texture->mem, 0);
+	error = vkBindImageMemory(deviceObj->_device, texture->image, texture->mem, 0);
 	assert(!error);
 
 	VkImageSubresource subresource	= {};
@@ -722,10 +722,10 @@ void VulkanRenderer::createTextureLinear(const char* filename, TextureData *text
 	VkSubresourceLayout layout;
 	uint8_t *data;
 
-	vkGetImageSubresourceLayout(deviceObj->device, texture->image, &subresource, &layout);
+	vkGetImageSubresourceLayout(deviceObj->_device, texture->image, &subresource, &layout);
 
 	// Map the GPU memory on to local host
-	error = vkMapMemory(deviceObj->device, texture->mem, 0, texture->memoryAlloc.allocationSize, 0, (void**)&data);
+	error = vkMapMemory(deviceObj->_device, texture->mem, 0, texture->memoryAlloc.allocationSize, 0, (void**)&data);
 	assert(!error);
 
 	// Load image texture data in the mapped buffer
@@ -741,10 +741,10 @@ void VulkanRenderer::createTextureLinear(const char* filename, TextureData *text
 	}
 
 	// UnMap the host memory to push the changes into the device memory
-	vkUnmapMemory(deviceObj->device, texture->mem);
+	vkUnmapMemory(deviceObj->_device, texture->mem);
 	
 	// Command buffer allocation and recording begins
-	CommandBufferMgr::allocCommandBuffer(&deviceObj->device, cmdPool, &cmdTexture);
+	CommandBufferMgr::allocCommandBuffer(&deviceObj->_device, cmdPool, &cmdTexture);
 	CommandBufferMgr::beginCommandBuffer(cmdTexture);
 
 	VkImageSubresourceRange subresourceRange	= {};
@@ -767,7 +767,7 @@ void VulkanRenderer::createTextureLinear(const char* filename, TextureData *text
 	fenceCI.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	fenceCI.flags = 0;
 
-	vkCreateFence(deviceObj->device, &fenceCI, nullptr, &fence);
+	vkCreateFence(deviceObj->_device, &fenceCI, nullptr, &fence);
 
 	VkSubmitInfo submitInfo = {};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -775,9 +775,9 @@ void VulkanRenderer::createTextureLinear(const char* filename, TextureData *text
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &cmdTexture;
 
-	CommandBufferMgr::submitCommandBuffer(deviceObj->queue, &cmdTexture, &submitInfo, fence);
-	vkWaitForFences(deviceObj->device, 1, &fence, VK_TRUE, 10000000000);
-	vkDestroyFence(deviceObj->device, fence, nullptr);
+	CommandBufferMgr::submitCommandBuffer(deviceObj->_queue, &cmdTexture, &submitInfo, fence);
+	vkWaitForFences(deviceObj->_device, 1, &fence, VK_TRUE, 10000000000);
+	vkDestroyFence(deviceObj->_device, fence, nullptr);
 
 	// Specify a particular kind of texture using samplers
 	VkSamplerCreateInfo samplerCI	= {};
@@ -790,7 +790,7 @@ void VulkanRenderer::createTextureLinear(const char* filename, TextureData *text
 	samplerCI.addressModeV			= VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	samplerCI.addressModeW			= VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	samplerCI.mipLodBias			= 0.0f;
-	if (deviceObj->deviceFeatures.samplerAnisotropy == VK_TRUE)
+	if (deviceObj->_deviceFeatures.samplerAnisotropy == VK_TRUE)
 	{
 		samplerCI.anisotropyEnable	= VK_TRUE;
 		samplerCI.maxAnisotropy		= 8;
@@ -807,7 +807,7 @@ void VulkanRenderer::createTextureLinear(const char* filename, TextureData *text
 	samplerCI.unnormalizedCoordinates = VK_FALSE;
 
 	// Create the sampler
-	error = vkCreateSampler(deviceObj->device, &samplerCI, NULL, &texture->sampler);
+	error = vkCreateSampler(deviceObj->_device, &samplerCI, NULL, &texture->sampler);
 	assert(!error);
 
 	// Create image view to allow shader to access the texture information -
@@ -825,7 +825,7 @@ void VulkanRenderer::createTextureLinear(const char* filename, TextureData *text
 	viewCI.flags					= 0;
 	viewCI.image					= texture->image;
 
-	error = vkCreateImageView(deviceObj->device, &viewCI, NULL, &texture->view);
+	error = vkCreateImageView(deviceObj->_device, &viewCI, NULL, &texture->view);
 	assert(!error);
 
 	texture->descsImgInfo.sampler		= texture->sampler;
@@ -907,7 +907,7 @@ void VulkanRenderer::createRenderPass(bool isDepthSupported, bool clear)
 	rpInfo.pDependencies					= NULL;
 
 	// Create the render pass object
-	result = vkCreateRenderPass(deviceObj->device, &rpInfo, NULL, &renderPass);
+	result = vkCreateRenderPass(deviceObj->_device, &rpInfo, NULL, &renderPass);
 	assert(result == VK_SUCCESS);
 }
 
@@ -934,7 +934,7 @@ void VulkanRenderer::createFrameBuffer(bool includeDepth)
 	framebuffers.resize(swapChainObj->scPublicVars.swapchainImageCount);
 	for (i = 0; i < swapChainObj->scPublicVars.swapchainImageCount; i++) {
 		attachments[0] = swapChainObj->scPublicVars.colorBuffer[i].view;
-		result = vkCreateFramebuffer(deviceObj->device, &fbInfo, NULL, &framebuffers.at(i));
+		result = vkCreateFramebuffer(deviceObj->_device, &fbInfo, NULL, &framebuffers.at(i));
 		assert(result == VK_SUCCESS);
 	}
 }
@@ -942,14 +942,14 @@ void VulkanRenderer::createFrameBuffer(bool includeDepth)
 void VulkanRenderer::destroyFramebuffers()
 {
 	for (uint32_t i = 0; i < swapChainObj->scPublicVars.swapchainImageCount; i++) {
-		vkDestroyFramebuffer(deviceObj->device, framebuffers.at(i), NULL);
+		vkDestroyFramebuffer(deviceObj->_device, framebuffers.at(i), NULL);
 	}
 	framebuffers.clear();
 }
 
 void VulkanRenderer::destroyRenderpass()
 {
-	vkDestroyRenderPass(deviceObj->device, renderPass, NULL);
+	vkDestroyRenderPass(deviceObj->_device, renderPass, NULL);
 }
 
 void VulkanRenderer::destroyDrawableVertexBuffer()
@@ -970,10 +970,10 @@ void VulkanRenderer::destroyDrawableUniformBuffer()
 
 void VulkanRenderer::destroyTextureResource()
 {
-	vkFreeMemory(deviceObj->device, texture.mem, NULL);
-	vkDestroySampler(deviceObj->device, texture.sampler, NULL);
-	vkDestroyImage(deviceObj->device, texture.image, NULL);
-	vkDestroyImageView(deviceObj->device, texture.view, NULL);
+	vkFreeMemory(deviceObj->_device, texture.mem, NULL);
+	vkDestroySampler(deviceObj->_device, texture.sampler, NULL);
+	vkDestroyImage(deviceObj->_device, texture.image, NULL);
+	vkDestroyImageView(deviceObj->_device, texture.view, NULL);
 }
 
 void VulkanRenderer::destroyDrawableCommandBuffer()
@@ -994,28 +994,28 @@ void VulkanRenderer::destroyDrawableSynchronizationObjects()
 
 void VulkanRenderer::destroyDepthBuffer()
 {
-	vkDestroyImageView(deviceObj->device, Depth.view, NULL);
-	vkDestroyImage(deviceObj->device, Depth.image, NULL);
-	vkFreeMemory(deviceObj->device, Depth.mem, NULL);
+	vkDestroyImageView(deviceObj->_device, Depth.view, NULL);
+	vkDestroyImage(deviceObj->_device, Depth.image, NULL);
+	vkFreeMemory(deviceObj->_device, Depth.mem, NULL);
 }
 
 void VulkanRenderer::destroyCommandBuffer()
 {
 	VkCommandBuffer cmdBufs[] = { cmdDepthImage, cmdVertexBuffer, cmdTexture };
-	vkFreeCommandBuffers(deviceObj->device, cmdPool, sizeof(cmdBufs)/sizeof(VkCommandBuffer), cmdBufs);
+	vkFreeCommandBuffers(deviceObj->_device, cmdPool, sizeof(cmdBufs)/sizeof(VkCommandBuffer), cmdBufs);
 }
 
 void VulkanRenderer::destroyCommandPool()
 {
 	VulkanDevice* deviceObj		= application->_deviceObj;
 
-	vkDestroyCommandPool(deviceObj->device, cmdPool, NULL);
+	vkDestroyCommandPool(deviceObj->_device, cmdPool, NULL);
 }
 
 void VulkanRenderer::buildSwapChainAndDepthImage()
 {
 	// Get the appropriate queue to submit the command into
-	deviceObj->getDeviceQueue();
+	deviceObj->GetDeviceQueue();
 
 	// Create swapchain and get the color image
 	swapChainObj->createSwapChain(cmdDepthImage);
@@ -1026,7 +1026,7 @@ void VulkanRenderer::buildSwapChainAndDepthImage()
 
 void VulkanRenderer::createVertexBuffer()
 {
-	CommandBufferMgr::allocCommandBuffer(&deviceObj->device, cmdPool, &cmdVertexBuffer);
+	CommandBufferMgr::allocCommandBuffer(&deviceObj->_device, cmdPool, &cmdVertexBuffer);
 	CommandBufferMgr::beginCommandBuffer(cmdVertexBuffer);
 
 	for each (VulkanDrawable* drawableObj in drawableList)
@@ -1034,7 +1034,7 @@ void VulkanRenderer::createVertexBuffer()
 		drawableObj->createVertexBuffer(geometryData, sizeof(geometryData), sizeof(geometryData[0]), false);
 	}
 	CommandBufferMgr::endCommandBuffer(cmdVertexBuffer);
-	CommandBufferMgr::submitCommandBuffer(deviceObj->queue, &cmdVertexBuffer);
+	CommandBufferMgr::submitCommandBuffer(deviceObj->_queue, &cmdVertexBuffer);
 }
 
 void VulkanRenderer::createShaders()
@@ -1107,7 +1107,7 @@ void VulkanRenderer::setImageLayout(VkImage image, VkImageAspectFlags aspectMask
 	assert(cmd != VK_NULL_HANDLE);
 	
 	// The deviceObj->queue must be initialized
-	assert(deviceObj->queue != VK_NULL_HANDLE);
+	assert(deviceObj->_queue != VK_NULL_HANDLE);
 
 	VkImageMemoryBarrier imgMemoryBarrier = {};
 	imgMemoryBarrier.sType			= VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -1177,7 +1177,7 @@ void VulkanRenderer::destroyPipeline()
 {
 	for each (VkPipeline* pipeline in pipelineList)
 	{
-		vkDestroyPipeline(deviceObj->device, *pipeline, NULL);
+		vkDestroyPipeline(deviceObj->_device, *pipeline, NULL);
 		free(pipeline);
 	}
 	pipelineList.clear();

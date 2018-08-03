@@ -49,7 +49,7 @@ void VulkanPipeline::createPipelineCache()
 	pipelineCacheInfo.initialDataSize	= 0;
 	pipelineCacheInfo.pInitialData		= NULL;
 	pipelineCacheInfo.flags				= 0;
-	result = vkCreatePipelineCache(deviceObj->device, &pipelineCacheInfo, NULL, &pipelineCache);
+	result = vkCreatePipelineCache(deviceObj->_device, &pipelineCacheInfo, NULL, &pipelineCache);
 	assert(result == VK_SUCCESS);
 }
 
@@ -197,7 +197,7 @@ bool VulkanPipeline::createPipeline(VulkanDrawable* drawableObj, VkPipeline* pip
 	pipelineInfo.subpass				= 0;
 
 	// Create the pipeline using the meta-data store in the VkGraphicsPipelineCreateInfo object
-	if (vkCreateGraphicsPipelines(deviceObj->device, pipelineCache, 1, &pipelineInfo, NULL, pipeline) == VK_SUCCESS)
+	if (vkCreateGraphicsPipelines(deviceObj->_device, pipelineCache, 1, &pipelineInfo, NULL, pipeline) == VK_SUCCESS)
 	{
 		return true;
 	}
@@ -210,5 +210,5 @@ bool VulkanPipeline::createPipeline(VulkanDrawable* drawableObj, VkPipeline* pip
 // Destroy the pipeline cache object when no more required
 void VulkanPipeline::destroyPipelineCache()
 {
-	vkDestroyPipelineCache(deviceObj->device, pipelineCache, NULL);
+	vkDestroyPipelineCache(deviceObj->_device, pipelineCache, NULL);
 }

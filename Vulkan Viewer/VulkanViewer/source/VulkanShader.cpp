@@ -49,7 +49,7 @@ void VulkanShader::buildShaderModuleWithSPV(uint32_t *vertShaderText, size_t ver
 	moduleCreateInfo.flags = 0;
 	moduleCreateInfo.codeSize = vertexSPVSize;
 	moduleCreateInfo.pCode = vertShaderText;
-	result = vkCreateShaderModule(deviceObj->device, &moduleCreateInfo, NULL, &shaderStages[0].module);
+	result = vkCreateShaderModule(deviceObj->_device, &moduleCreateInfo, NULL, &shaderStages[0].module);
 	assert(result == VK_SUCCESS);
 
 	std::vector<unsigned int> fragSPV;
@@ -65,15 +65,15 @@ void VulkanShader::buildShaderModuleWithSPV(uint32_t *vertShaderText, size_t ver
 	moduleCreateInfo.flags = 0;
 	moduleCreateInfo.codeSize = fragmentSPVSize;
 	moduleCreateInfo.pCode = fragShaderText;
-	result = vkCreateShaderModule(deviceObj->device, &moduleCreateInfo, NULL, &shaderStages[1].module);
+	result = vkCreateShaderModule(deviceObj->_device, &moduleCreateInfo, NULL, &shaderStages[1].module);
 	assert(result == VK_SUCCESS);
 }
 
 void VulkanShader::destroyShaders()
 {
 	VulkanDevice* deviceObj = VulkanApplication::GetInstance()->_deviceObj;
-	vkDestroyShaderModule(deviceObj->device, shaderStages[0].module, NULL);
-	vkDestroyShaderModule(deviceObj->device, shaderStages[1].module, NULL);
+	vkDestroyShaderModule(deviceObj->_device, shaderStages[0].module, NULL);
+	vkDestroyShaderModule(deviceObj->_device, shaderStages[1].module, NULL);
 }
 
 #ifdef AUTO_COMPILE_GLSL_TO_SPV
