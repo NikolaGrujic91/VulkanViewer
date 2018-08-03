@@ -150,7 +150,7 @@ void VulkanApplication::Resize()
 	_rendererObj->destroyFramebuffers();
 	_rendererObj->destroyCommandPool();
 	_rendererObj->destroyPipeline();
-	_rendererObj->getPipelineObject()->destroyPipelineCache();
+	_rendererObj->getPipelineObject()->DestroyPipelineCache();
 	for (auto drawableObj : *_rendererObj->getDrawingItems())
 	{
 		drawableObj->DestroyDescriptor();
@@ -173,7 +173,7 @@ void VulkanApplication::DeInitialize()
 	_rendererObj->destroyPipeline();
 
 	// Destroy the associate pipeline cache
-	_rendererObj->getPipelineObject()->destroyPipelineCache();
+	_rendererObj->getPipelineObject()->DestroyPipelineCache();
 
 	for (VulkanDrawable* drawableObj : *_rendererObj->getDrawingItems())
 	{

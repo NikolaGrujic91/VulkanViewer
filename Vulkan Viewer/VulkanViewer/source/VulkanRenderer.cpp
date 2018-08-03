@@ -1082,13 +1082,13 @@ void VulkanRenderer::createPipelineStateManagement()
 		drawableObj->CreatePipelineLayout();
 	}
 
-	pipelineObj.createPipelineCache();
+	pipelineObj.CreatePipelineCache();
 
 	const bool depthPresent = true;
 	for each (VulkanDrawable* drawableObj in drawableList)
 	{
 		VkPipeline* pipeline = (VkPipeline*)malloc(sizeof(VkPipeline));
-		if (pipelineObj.createPipeline(drawableObj, pipeline, &shaderObj, depthPresent))
+		if (pipelineObj.CreatePipeline(drawableObj, pipeline, &shaderObj, depthPresent))
 		{
 			pipelineList.push_back(pipeline);
 			drawableObj->SetPipeline(pipeline);
