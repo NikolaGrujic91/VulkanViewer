@@ -126,7 +126,7 @@ LRESULT CALLBACK VulkanRenderer::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
         {
 			appObj->_rendererObj->_width = lParam & 0xffff;
 			appObj->_rendererObj->_height = (lParam & 0xffff0000) >> 16;
-			appObj->_rendererObj->GetSwapChain()->setSwapChainExtent(appObj->_rendererObj->_width, appObj->_rendererObj->_height);
+			appObj->_rendererObj->GetSwapChain()->SetSwapChainExtent(appObj->_rendererObj->_width, appObj->_rendererObj->_height);
 			appObj->Resize();
 		}
 		break;
@@ -841,7 +841,7 @@ void VulkanRenderer::CreateRenderPass(bool isDepthSupported, bool clear)
 
     // Attach the color buffer and depth buffer as an attachment to render pass instance
 	VkAttachmentDescription attachments[2];
-	attachments[0].format					= _swapChainObj->scPublicVars.format;
+	attachments[0].format					= _swapChainObj->_scPublicVars._format;
 	attachments[0].samples					= NUM_SAMPLES;
 	attachments[0].loadOp					= clear ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 	attachments[0].storeOp					= VK_ATTACHMENT_STORE_OP_STORE;
@@ -920,10 +920,10 @@ void VulkanRenderer::CreateFrameBuffer(bool includeDepth)
 	fbInfo.layers					= 1;
 
     _framebuffers.clear();
-	_framebuffers.resize(_swapChainObj->scPublicVars.swapchainImageCount);
-	for (uint32_t i = 0; i < _swapChainObj->scPublicVars.swapchainImageCount; i++) 
+	_framebuffers.resize(_swapChainObj->_scPublicVars._swapchainImageCount);
+	for (uint32_t i = 0; i < _swapChainObj->_scPublicVars._swapchainImageCount; i++) 
     {
-		attachments[0] = _swapChainObj->scPublicVars.colorBuffer[i].view;
+		attachments[0] = _swapChainObj->_scPublicVars._colorBuffer[i]._view;
         const VkResult result = vkCreateFramebuffer(_deviceObj->_device, &fbInfo, nullptr, &_framebuffers.at(i));
 		assert(result == VK_SUCCESS);
 	}
@@ -931,7 +931,7 @@ void VulkanRenderer::CreateFrameBuffer(bool includeDepth)
 
 void VulkanRenderer::DestroyFramebuffers()
 {
-	for (uint32_t i = 0; i < _swapChainObj->scPublicVars.swapchainImageCount; i++)
+	for (uint32_t i = 0; i < _swapChainObj->_scPublicVars._swapchainImageCount; i++)
     {
 		vkDestroyFramebuffer(_deviceObj->_device, _framebuffers.at(i), nullptr);
 	}
@@ -1009,7 +1009,7 @@ void VulkanRenderer::BuildSwapChainAndDepthImage()
 	_deviceObj->GetDeviceQueue();
 
 	// Create swapchain and get the color image
-	_swapChainObj->createSwapChain(_cmdDepthImage);
+	_swapChainObj->CreateSwapChain(_cmdDepthImage);
 	
 	// Create the depth image
 	CreateDepthImage();

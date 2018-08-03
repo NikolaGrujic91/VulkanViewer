@@ -131,7 +131,7 @@ void VulkanApplication::Initialize()
 		// Create an empy window 500x500
 		_rendererObj->CreatePresentationWindow(500, 500);
 		// Initialize swapchain
-		_rendererObj->GetSwapChain()->intializeSwapChain();
+		_rendererObj->GetSwapChain()->IntializeSwapChain();
 	}
 	_rendererObj->Initialize();
 }
@@ -156,7 +156,7 @@ void VulkanApplication::Resize()
 		drawableObj->DestroyDescriptor();
 	}
 	_rendererObj->DestroyRenderpass();
-	_rendererObj->GetSwapChain()->destroySwapChain();
+	_rendererObj->GetSwapChain()->DestroySwapChain();
 	_rendererObj->DestroyDrawableVertexBuffer();
 	_rendererObj->DestroyDrawableUniformBuffer();
 	_rendererObj->DestroyTextureResource();
@@ -188,7 +188,7 @@ void VulkanApplication::DeInitialize()
 
 	_rendererObj->DestroyDrawableCommandBuffer();
 	_rendererObj->DestroyDepthBuffer();
-	_rendererObj->GetSwapChain()->destroySwapChain();
+	_rendererObj->GetSwapChain()->DestroySwapChain();
 	_rendererObj->DestroyCommandBuffer();
 	_rendererObj->DestroyDrawableSynchronizationObjects();
 	_rendererObj->DestroyCommandPool();

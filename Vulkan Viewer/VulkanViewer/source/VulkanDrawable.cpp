@@ -413,10 +413,10 @@ void VulkanDrawable::RecordCommandBuffer(int currentImage, VkCommandBuffer* cmdD
 void VulkanDrawable::Prepare()
 {
 	VulkanDevice* deviceObj = _rendererObj->GetDevice();
-	_vecCmdDraw.resize(_rendererObj->GetSwapChain()->scPublicVars.colorBuffer.size());
+	_vecCmdDraw.resize(_rendererObj->GetSwapChain()->_scPublicVars._colorBuffer.size());
 	// For each swapbuffer color surface image buffer 
 	// allocate the corresponding command buffer
-	for (int i = 0; i < _rendererObj->GetSwapChain()->scPublicVars.colorBuffer.size(); i++)
+	for (int i = 0; i < _rendererObj->GetSwapChain()->_scPublicVars._colorBuffer.size(); i++)
 	{
 		// Allocate, create and start command buffer recording
 		CommandBufferMgr::allocCommandBuffer(&deviceObj->_device, *_rendererObj->GetCommandPool(), &_vecCmdDraw[i]);
@@ -470,8 +470,8 @@ void VulkanDrawable::Render()
 	VulkanDevice* deviceObj			= _rendererObj->GetDevice();
 	VulkanSwapChain* swapChainObj	= _rendererObj->GetSwapChain();
 
-	uint32_t& currentColorImage		= swapChainObj->scPublicVars.currentColorBuffer;
-	VkSwapchainKHR& swapChain		= swapChainObj->scPublicVars.swapChain;
+	uint32_t& currentColorImage		= swapChainObj->_scPublicVars._currentColorBuffer;
+	VkSwapchainKHR& swapChain		= swapChainObj->_scPublicVars._swapChain;
 
 	VkFence nullFence = VK_NULL_HANDLE;
 	
