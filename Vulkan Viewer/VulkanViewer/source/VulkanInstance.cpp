@@ -4,8 +4,8 @@ VkResult VulkanInstance::CreateInstance(std::vector<const char *>& layers,
 	                                    std::vector<const char *>& extensionNames,
 	                                    char const*const appName)
 {
-	_layerExtension.appRequestedExtensionNames	= extensionNames;
-	_layerExtension.appRequestedLayerNames		= layers;
+	_layerExtension._appRequestedExtensionNames	= extensionNames;
+	_layerExtension._appRequestedLayerNames		= layers;
 	
 	// Define the Vulkan application structure 
 	VkApplicationInfo appInfo	= {};
@@ -21,7 +21,7 @@ VkResult VulkanInstance::CreateInstance(std::vector<const char *>& layers,
 	// Define the Vulkan instance create info structure 
 	VkInstanceCreateInfo instInfo	= {};
 	instInfo.sType					= VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-	instInfo.pNext					= &_layerExtension.dbgReportCreateInfo;
+	instInfo.pNext					= &_layerExtension._dbgReportCreateInfo;
 	instInfo.flags					= 0;
 	instInfo.pApplicationInfo		= &appInfo;
 

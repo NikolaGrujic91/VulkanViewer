@@ -21,8 +21,8 @@ VulkanDevice::~VulkanDevice()
 // Note: This function requires queue object to be in existence before
 VkResult VulkanDevice::CreateDevice(std::vector<const char *>& layers, std::vector<const char *>& extensions)
 {
-	_layerExtension.appRequestedLayerNames		= layers;
-	_layerExtension.appRequestedExtensionNames	= extensions;
+	_layerExtension._appRequestedLayerNames		= layers;
+	_layerExtension._appRequestedExtensionNames	= extensions;
 
 	// Create Device with available queue information.
 	float queuePriorities[1]			= { 0.0 };

@@ -13,7 +13,7 @@ extern std::vector<const char *> deviceExtensionNames;
 VulkanApplication::VulkanApplication() 
 {
 	// At application start up, enumerate instance layers
-	_instanceObj._layerExtension.getInstanceLayerProperties();
+	_instanceObj._layerExtension.GetInstanceLayerProperties();
 
 	_deviceObj = nullptr;
 	_debugFlag = false;
@@ -64,7 +64,7 @@ VkResult VulkanApplication::HandShakeWithDevice(VkPhysicalDevice* gpu, std::vect
 	}
 	
 	// Print the devices available layer and their extension 
-	_deviceObj->_layerExtension.getDeviceExtensionProperties(gpu);
+	_deviceObj->_layerExtension.GetDeviceExtensionProperties(gpu);
 
 	// Get the physical device or GPU properties
 	vkGetPhysicalDeviceProperties(*gpu, &_deviceObj->_gpuProps);
@@ -104,7 +104,7 @@ void VulkanApplication::Initialize()
 	char title[] = "Hello World!!!";
 
 	// Check if the supplied layer are support or not
-	_instanceObj._layerExtension.areLayersSupported(layerNames);
+	_instanceObj._layerExtension.AreLayersSupported(layerNames);
 
 	// Create the Vulkan instance with specified layer and extension names.
 	CreateVulkanInstance(layerNames, instanceExtensionNames, title);
@@ -112,7 +112,7 @@ void VulkanApplication::Initialize()
 	// Create the debugging report if debugging is enabled
 	if (_debugFlag)
 	{
-		_instanceObj._layerExtension.createDebugReportCallback();
+		_instanceObj._layerExtension.CreateDebugReportCallback();
 	}
 
 	// Get the list of physical devices on the system
@@ -197,7 +197,7 @@ void VulkanApplication::DeInitialize()
 	_deviceObj->DestroyDevice();
 	if (_debugFlag) 
 	{
-		_instanceObj._layerExtension.destroyDebugReportCallback();
+		_instanceObj._layerExtension.DestroyDebugReportCallback();
 	}
 	_instanceObj.DestroyInstance();
 }
