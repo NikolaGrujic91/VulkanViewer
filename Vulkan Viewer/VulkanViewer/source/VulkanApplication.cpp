@@ -129,11 +129,11 @@ void VulkanApplication::Initialize()
 	{
 		_rendererObj = new VulkanRenderer(this, _deviceObj);
 		// Create an empy window 500x500
-		_rendererObj->createPresentationWindow(500, 500);
+		_rendererObj->CreatePresentationWindow(500, 500);
 		// Initialize swapchain
-		_rendererObj->getSwapChain()->intializeSwapChain();
+		_rendererObj->GetSwapChain()->intializeSwapChain();
 	}
-	_rendererObj->initialize();
+	_rendererObj->Initialize();
 }
 
 void VulkanApplication::Resize()
@@ -147,21 +147,21 @@ void VulkanApplication::Resize()
 	_isResizing = true;
 
 	vkDeviceWaitIdle(_deviceObj->_device);
-	_rendererObj->destroyFramebuffers();
-	_rendererObj->destroyCommandPool();
-	_rendererObj->destroyPipeline();
-	_rendererObj->getPipelineObject()->DestroyPipelineCache();
-	for (auto drawableObj : *_rendererObj->getDrawingItems())
+	_rendererObj->DestroyFramebuffers();
+	_rendererObj->DestroyCommandPool();
+	_rendererObj->DestroyPipeline();
+	_rendererObj->GetPipelineObject()->DestroyPipelineCache();
+	for (auto drawableObj : *_rendererObj->GetDrawingItems())
 	{
 		drawableObj->DestroyDescriptor();
 	}
-	_rendererObj->destroyRenderpass();
-	_rendererObj->getSwapChain()->destroySwapChain();
-	_rendererObj->destroyDrawableVertexBuffer();
-	_rendererObj->destroyDrawableUniformBuffer();
-	_rendererObj->destroyTextureResource();
-	_rendererObj->destroyDepthBuffer();
-	_rendererObj->initialize();
+	_rendererObj->DestroyRenderpass();
+	_rendererObj->GetSwapChain()->destroySwapChain();
+	_rendererObj->DestroyDrawableVertexBuffer();
+	_rendererObj->DestroyDrawableUniformBuffer();
+	_rendererObj->DestroyTextureResource();
+	_rendererObj->DestroyDepthBuffer();
+	_rendererObj->Initialize();
 	Prepare();
 
 	_isResizing = false;
@@ -170,30 +170,30 @@ void VulkanApplication::Resize()
 void VulkanApplication::DeInitialize()
 {
 	// Destroy all the pipeline objects
-	_rendererObj->destroyPipeline();
+	_rendererObj->DestroyPipeline();
 
 	// Destroy the associate pipeline cache
-	_rendererObj->getPipelineObject()->DestroyPipelineCache();
+	_rendererObj->GetPipelineObject()->DestroyPipelineCache();
 
-	for (VulkanDrawable* drawableObj : *_rendererObj->getDrawingItems())
+	for (VulkanDrawable* drawableObj : *_rendererObj->GetDrawingItems())
 	{
 		drawableObj->DestroyDescriptor();
 	}
 
-	_rendererObj->getShader()->destroyShaders();
-	_rendererObj->destroyFramebuffers();
-	_rendererObj->destroyRenderpass();
-	_rendererObj->destroyDrawableVertexBuffer();
-	_rendererObj->destroyDrawableUniformBuffer();
+	_rendererObj->GetShader()->destroyShaders();
+	_rendererObj->DestroyFramebuffers();
+	_rendererObj->DestroyRenderpass();
+	_rendererObj->DestroyDrawableVertexBuffer();
+	_rendererObj->DestroyDrawableUniformBuffer();
 
-	_rendererObj->destroyDrawableCommandBuffer();
-	_rendererObj->destroyDepthBuffer();
-	_rendererObj->getSwapChain()->destroySwapChain();
-	_rendererObj->destroyCommandBuffer();
-	_rendererObj->destroyDrawableSynchronizationObjects();
-	_rendererObj->destroyCommandPool();
-	_rendererObj->destroyPresentationWindow();
-	_rendererObj->destroyTextureResource();
+	_rendererObj->DestroyDrawableCommandBuffer();
+	_rendererObj->DestroyDepthBuffer();
+	_rendererObj->GetSwapChain()->destroySwapChain();
+	_rendererObj->DestroyCommandBuffer();
+	_rendererObj->DestroyDrawableSynchronizationObjects();
+	_rendererObj->DestroyCommandPool();
+	_rendererObj->DestroyPresentationWindow();
+	_rendererObj->DestroyTextureResource();
 	_deviceObj->DestroyDevice();
 	if (_debugFlag) 
 	{
@@ -205,13 +205,13 @@ void VulkanApplication::DeInitialize()
 void VulkanApplication::Prepare()
 {
 	_isPrepared = false;
-	_rendererObj->prepare();
+	_rendererObj->Prepare();
 	_isPrepared = true;
 }
 
 void VulkanApplication::Update() const
 {
-	_rendererObj->update();
+	_rendererObj->Update();
 }
 
 bool VulkanApplication::Render() const
@@ -221,5 +221,5 @@ bool VulkanApplication::Render() const
 		return false;
 	}
 
-	return _rendererObj->render();
+	return _rendererObj->Render();
 }

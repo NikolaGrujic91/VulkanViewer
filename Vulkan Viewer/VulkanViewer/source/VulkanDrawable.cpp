@@ -39,7 +39,7 @@ void VulkanDrawable::DestroyCommandBuffer()
 {
 	for (auto& i : _vecCmdDraw)
 	{
-		vkFreeCommandBuffers(_deviceObj->_device, _rendererObj->cmdPool, 1, &i);
+		vkFreeCommandBuffers(_deviceObj->_device, _rendererObj->_cmdPool, 1, &i);
 	}
 }
 
@@ -262,7 +262,7 @@ void VulkanDrawable::CreateDescriptorResources()
 // This function depend on the createDescriptorPool() and createUniformBuffer().
 void VulkanDrawable::CreateDescriptorSet(bool useTexture)
 {
-	VulkanPipeline* pipelineObj = _rendererObj->getPipelineObject();
+	VulkanPipeline* pipelineObj = _rendererObj->GetPipelineObject();
 
 	// Create the descriptor allocation structure and specify the descriptor 
 	// pool and descriptor layout
@@ -315,8 +315,8 @@ void VulkanDrawable::CreateDescriptorSet(bool useTexture)
 
 void VulkanDrawable::InitViewports(VkCommandBuffer* cmd)
 {
-	_viewport.height	= static_cast<float>(_rendererObj->height);
-	_viewport.width		= static_cast<float>(_rendererObj->width);
+	_viewport.height	= static_cast<float>(_rendererObj->_height);
+	_viewport.width		= static_cast<float>(_rendererObj->_width);
 	_viewport.minDepth	= static_cast<float>(0.0f);
 	_viewport.maxDepth	= static_cast<float>(1.0f);
 	_viewport.x			= 0;
@@ -326,8 +326,8 @@ void VulkanDrawable::InitViewports(VkCommandBuffer* cmd)
 
 void VulkanDrawable::InitScissors(VkCommandBuffer* cmd)
 {
-	_scissor.extent.width	= _rendererObj->width;
-	_scissor.extent.height	= _rendererObj->height;
+	_scissor.extent.width	= _rendererObj->_width;
+	_scissor.extent.height	= _rendererObj->_height;
 	_scissor.offset.x		= 0;
 	_scissor.offset.y		= 0;
 	vkCmdSetScissor(*cmd, 0, NUMBER_OF_SCISSORS, &_scissor);
@@ -335,15 +335,15 @@ void VulkanDrawable::InitScissors(VkCommandBuffer* cmd)
 
 void VulkanDrawable::DestroyVertexBuffer()
 {
-	vkDestroyBuffer(_rendererObj->getDevice()->_device, _vertexBuffer._buf, nullptr);
-	vkFreeMemory(_rendererObj->getDevice()->_device, _vertexBuffer._mem, nullptr);
+	vkDestroyBuffer(_rendererObj->GetDevice()->_device, _vertexBuffer._buf, nullptr);
+	vkFreeMemory(_rendererObj->GetDevice()->_device, _vertexBuffer._mem, nullptr);
 }
 
 void VulkanDrawable::DestroyUniformBuffer()
 {
 	vkUnmapMemory(_deviceObj->_device, _uniformData._memory);
-	vkDestroyBuffer(_rendererObj->getDevice()->_device, _uniformData._buffer, nullptr);
-	vkFreeMemory(_rendererObj->getDevice()->_device, _uniformData._memory, nullptr);
+	vkDestroyBuffer(_rendererObj->GetDevice()->_device, _uniformData._buffer, nullptr);
+	vkFreeMemory(_rendererObj->GetDevice()->_device, _uniformData._memory, nullptr);
 }
 
 void VulkanDrawable::SetTextures(TextureData * tex)
@@ -353,8 +353,8 @@ void VulkanDrawable::SetTextures(TextureData * tex)
 
 void VulkanDrawable::RecordCommandBuffer(int currentImage, VkCommandBuffer* cmdDraw)
 {
-	VulkanDevice* deviceObj			= _rendererObj->getDevice();
-	VulkanPipeline* pipelineObj 	= _rendererObj->getPipelineObject();
+	VulkanDevice* deviceObj			= _rendererObj->GetDevice();
+	VulkanPipeline* pipelineObj 	= _rendererObj->GetPipelineObject();
 
 	// Specify the clear color value
 	VkClearValue clearValues[2];
@@ -371,12 +371,12 @@ void VulkanDrawable::RecordCommandBuffer(int currentImage, VkCommandBuffer* cmdD
 	VkRenderPassBeginInfo renderPassBegin;
 	renderPassBegin.sType						= VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassBegin.pNext						= nullptr;
-	renderPassBegin.renderPass					= _rendererObj->renderPass;
-	renderPassBegin.framebuffer					= _rendererObj->framebuffers[currentImage];
+	renderPassBegin.renderPass					= _rendererObj->_renderPass;
+	renderPassBegin.framebuffer					= _rendererObj->_framebuffers[currentImage];
 	renderPassBegin.renderArea.offset.x			= 0;
 	renderPassBegin.renderArea.offset.y			= 0;
-	renderPassBegin.renderArea.extent.width		= _rendererObj->width;
-	renderPassBegin.renderArea.extent.height	= _rendererObj->height;
+	renderPassBegin.renderArea.extent.width		= _rendererObj->_width;
+	renderPassBegin.renderArea.extent.height	= _rendererObj->_height;
 	renderPassBegin.clearValueCount				= 2;
 	renderPassBegin.pClearValues				= clearValues;
 	
@@ -412,14 +412,14 @@ void VulkanDrawable::RecordCommandBuffer(int currentImage, VkCommandBuffer* cmdD
 
 void VulkanDrawable::Prepare()
 {
-	VulkanDevice* deviceObj = _rendererObj->getDevice();
-	_vecCmdDraw.resize(_rendererObj->getSwapChain()->scPublicVars.colorBuffer.size());
+	VulkanDevice* deviceObj = _rendererObj->GetDevice();
+	_vecCmdDraw.resize(_rendererObj->GetSwapChain()->scPublicVars.colorBuffer.size());
 	// For each swapbuffer color surface image buffer 
 	// allocate the corresponding command buffer
-	for (int i = 0; i < _rendererObj->getSwapChain()->scPublicVars.colorBuffer.size(); i++)
+	for (int i = 0; i < _rendererObj->GetSwapChain()->scPublicVars.colorBuffer.size(); i++)
 	{
 		// Allocate, create and start command buffer recording
-		CommandBufferMgr::allocCommandBuffer(&deviceObj->_device, *_rendererObj->getCommandPool(), &_vecCmdDraw[i]);
+		CommandBufferMgr::allocCommandBuffer(&deviceObj->_device, *_rendererObj->GetCommandPool(), &_vecCmdDraw[i]);
 		CommandBufferMgr::beginCommandBuffer(_vecCmdDraw[i]);
 
 		// Create the render pass instance 
@@ -432,7 +432,7 @@ void VulkanDrawable::Prepare()
 
 void VulkanDrawable::Update()
 {
-	VulkanDevice* deviceObj = _rendererObj->getDevice();
+	VulkanDevice* deviceObj = _rendererObj->GetDevice();
 	_projectionMatrix = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
 	_viewMatrix = glm::lookAt(
 		glm::vec3(0, 0, 5),		// Camera is in World Space
@@ -467,8 +467,8 @@ void VulkanDrawable::Update()
 
 void VulkanDrawable::Render()
 {
-	VulkanDevice* deviceObj			= _rendererObj->getDevice();
-	VulkanSwapChain* swapChainObj	= _rendererObj->getSwapChain();
+	VulkanDevice* deviceObj			= _rendererObj->GetDevice();
+	VulkanSwapChain* swapChainObj	= _rendererObj->GetSwapChain();
 
 	uint32_t& currentColorImage		= swapChainObj->scPublicVars.currentColorBuffer;
 	VkSwapchainKHR& swapChain		= swapChainObj->scPublicVars.swapChain;

@@ -94,8 +94,8 @@ VkResult VulkanSwapChain::createSurface()
 	VkWin32SurfaceCreateInfoKHR createInfo = {};
 	createInfo.sType		= VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 	createInfo.pNext		= NULL;
-	createInfo.hinstance	= rendererObj->connection;
-	createInfo.hwnd			= rendererObj->window;
+	createInfo.hinstance	= rendererObj->_connection;
+	createInfo.hwnd			= rendererObj->_window;
 
 	result = vkCreateWin32SurfaceKHR(instance, &createInfo, NULL, &scPublicVars.surface);
 
@@ -168,7 +168,7 @@ uint32_t VulkanSwapChain::getGraphicsQueueWithPresentationSupport()
 
 void VulkanSwapChain::getSupportedFormats()
 {
-	VkPhysicalDevice gpu = *rendererObj->getDevice()->_gpu;
+	VkPhysicalDevice gpu = *rendererObj->GetDevice()->_gpu;
 	VkResult  result;
 
 	// Get the list of VkFormats that are supported:
@@ -210,7 +210,7 @@ void VulkanSwapChain::intializeSwapChain()
 		std::cout << "Could not find a graphics and a present queue\nCould not find a graphics and a present queue\n";
 		exit(-1);
 	}
-	rendererObj->getDevice()->_graphicsQueueWithPresentIndex = index;
+	rendererObj->GetDevice()->_graphicsQueueWithPresentIndex = index;
 
 	// Get the list of formats that are supported
 	getSupportedFormats();
@@ -251,8 +251,8 @@ void VulkanSwapChain::getSurfaceCapabilitiesAndPresentMode()
 	if (scPrivateVars.surfCapabilities.currentExtent.width == (uint32_t)-1)
 	{
 		// If the surface width and height is not defined, the set the equal to image size.
-		scPrivateVars.swapChainExtent.width = rendererObj->width;
-		scPrivateVars.swapChainExtent.height = rendererObj->height;
+		scPrivateVars.swapChainExtent.width = rendererObj->_width;
+		scPrivateVars.swapChainExtent.height = rendererObj->_height;
 	}
 	else
 	{
@@ -323,11 +323,11 @@ void VulkanSwapChain::createSwapChainColorImages()
 	swapChainInfo.queueFamilyIndexCount = 0;
 	swapChainInfo.pQueueFamilyIndices	= NULL;
 
-	result = fpCreateSwapchainKHR(rendererObj->getDevice()->_device, &swapChainInfo, NULL, &scPublicVars.swapChain);
+	result = fpCreateSwapchainKHR(rendererObj->GetDevice()->_device, &swapChainInfo, NULL, &scPublicVars.swapChain);
 	assert(result == VK_SUCCESS);
 
 	// Create the swapchain object
-	result = fpGetSwapchainImagesKHR(rendererObj->getDevice()->_device, scPublicVars.swapChain, &scPublicVars.swapchainImageCount, NULL);
+	result = fpGetSwapchainImagesKHR(rendererObj->GetDevice()->_device, scPublicVars.swapChain, &scPublicVars.swapchainImageCount, NULL);
 	assert(result == VK_SUCCESS);
 
 	scPrivateVars.swapchainImages.clear();
@@ -336,11 +336,11 @@ void VulkanSwapChain::createSwapChainColorImages()
 	assert(scPrivateVars.swapchainImages.size() >= 1);
 
 	// Retrieve the swapchain image surfaces 
-	result = fpGetSwapchainImagesKHR(rendererObj->getDevice()->_device, scPublicVars.swapChain, &scPublicVars.swapchainImageCount, &scPrivateVars.swapchainImages[0]);
+	result = fpGetSwapchainImagesKHR(rendererObj->GetDevice()->_device, scPublicVars.swapChain, &scPublicVars.swapchainImageCount, &scPrivateVars.swapchainImages[0]);
 	assert(result == VK_SUCCESS);
 
 	if (oldSwapchain != VK_NULL_HANDLE) {
-		fpDestroySwapchainKHR(rendererObj->getDevice()->_device, oldSwapchain, NULL);
+		fpDestroySwapchainKHR(rendererObj->GetDevice()->_device, oldSwapchain, NULL);
 	}
 }
 
@@ -372,7 +372,7 @@ void VulkanSwapChain::createColorImageView(const VkCommandBuffer& cmd)
 
 		imgViewInfo.image = sc_buffer.image;
 
-		result = vkCreateImageView(rendererObj->getDevice()->_device, &imgViewInfo, NULL, &sc_buffer.view);
+		result = vkCreateImageView(rendererObj->GetDevice()->_device, &imgViewInfo, NULL, &sc_buffer.view);
 		scPublicVars.colorBuffer.push_back(sc_buffer);
 		assert(result == VK_SUCCESS);
 	}
