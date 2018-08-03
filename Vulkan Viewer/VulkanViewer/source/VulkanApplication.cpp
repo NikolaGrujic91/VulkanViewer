@@ -13,7 +13,7 @@ extern std::vector<const char *> deviceExtensionNames;
 VulkanApplication::VulkanApplication() 
 {
 	// At application start up, enumerate instance layers
-	_instanceObj.layerExtension.getInstanceLayerProperties();
+	_instanceObj._layerExtension.getInstanceLayerProperties();
 
 	_deviceObj = nullptr;
 	_debugFlag = false;
@@ -37,7 +37,7 @@ VulkanApplication* VulkanApplication::GetInstance()
 
 VkResult VulkanApplication::CreateVulkanInstance( std::vector<const char *>& layers, std::vector<const char *>& extensionNames, const char* applicationName)
 {
-	return _instanceObj.createInstance(layers, extensionNames, applicationName);
+	return _instanceObj.CreateInstance(layers, extensionNames, applicationName);
 }
 
 // This function is responsible for creating the logical device.
@@ -86,14 +86,14 @@ VkResult VulkanApplication::EnumeratePhysicalDevices(std::vector<VkPhysicalDevic
 {
 	uint32_t gpuDeviceCount;
 
-	VkResult result = vkEnumeratePhysicalDevices(_instanceObj.instance, &gpuDeviceCount, nullptr);
+	VkResult result = vkEnumeratePhysicalDevices(_instanceObj._instance, &gpuDeviceCount, nullptr);
 	assert(result == VK_SUCCESS);
 
 	assert(gpuDeviceCount);
 
 	gpuList.resize(gpuDeviceCount);
 
-	result = vkEnumeratePhysicalDevices(_instanceObj.instance, &gpuDeviceCount, gpuList.data());
+	result = vkEnumeratePhysicalDevices(_instanceObj._instance, &gpuDeviceCount, gpuList.data());
 	assert(result == VK_SUCCESS);
 
 	return result;
@@ -104,7 +104,7 @@ void VulkanApplication::Initialize()
 	char title[] = "Hello World!!!";
 
 	// Check if the supplied layer are support or not
-	_instanceObj.layerExtension.areLayersSupported(layerNames);
+	_instanceObj._layerExtension.areLayersSupported(layerNames);
 
 	// Create the Vulkan instance with specified layer and extension names.
 	CreateVulkanInstance(layerNames, instanceExtensionNames, title);
@@ -112,7 +112,7 @@ void VulkanApplication::Initialize()
 	// Create the debugging report if debugging is enabled
 	if (_debugFlag)
 	{
-		_instanceObj.layerExtension.createDebugReportCallback();
+		_instanceObj._layerExtension.createDebugReportCallback();
 	}
 
 	// Get the list of physical devices on the system
@@ -197,9 +197,9 @@ void VulkanApplication::DeInitialize()
 	_deviceObj->DestroyDevice();
 	if (_debugFlag) 
 	{
-		_instanceObj.layerExtension.destroyDebugReportCallback();
+		_instanceObj._layerExtension.destroyDebugReportCallback();
 	}
-	_instanceObj.destroyInstance();
+	_instanceObj.DestroyInstance();
 }
 
 void VulkanApplication::Prepare()

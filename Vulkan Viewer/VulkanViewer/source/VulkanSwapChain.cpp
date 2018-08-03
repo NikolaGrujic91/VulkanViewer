@@ -63,7 +63,7 @@ VulkanSwapChain::~VulkanSwapChain()
 VkResult VulkanSwapChain::createSwapChainExtensions()
 {
 	// Dependency on createPresentationWindow()
-	VkInstance& instance	= appObj->_instanceObj.instance;
+	VkInstance& instance	= appObj->_instanceObj._instance;
 	VkDevice& device		= appObj->_deviceObj->_device;
 
 	// Get Instance based swap chain extension function pointer
@@ -87,7 +87,7 @@ VkResult VulkanSwapChain::createSurface()
 {
 	VkResult  result;
 	// Depends on createPresentationWindow(), need an empty window handle
-	VkInstance& instance = appObj->_instanceObj.instance;
+	VkInstance& instance = appObj->_instanceObj._instance;
 
 	// Construct the surface description:
 #ifdef _WIN32
@@ -391,7 +391,7 @@ void VulkanSwapChain::destroySwapChain()
 		// This piece code will only executes at application shutdown.
         // During resize the old swapchain image is delete in createSwapChainColorImages()
 		fpDestroySwapchainKHR(deviceObj->_device, scPublicVars.swapChain, NULL);
-		vkDestroySurfaceKHR(appObj->_instanceObj.instance, scPublicVars.surface, NULL);
+		vkDestroySurfaceKHR(appObj->_instanceObj._instance, scPublicVars.surface, NULL);
 	}
 }
 
