@@ -1047,7 +1047,7 @@ void VulkanRenderer::CreateShaders()
 	vertShaderCode = readFile("Texture-vert.spv", &sizeVert);
 	fragShaderCode = readFile("Texture-frag.spv", &sizeFrag);
 
-	_shaderObj.buildShaderModuleWithSPV(static_cast<uint32_t*>(vertShaderCode), sizeVert, static_cast<uint32_t*>(fragShaderCode), sizeFrag);
+	_shaderObj.BuildShaderModuleWithSpv(static_cast<uint32_t*>(vertShaderCode), sizeVert, static_cast<uint32_t*>(fragShaderCode), sizeFrag);
 #endif
 }
 

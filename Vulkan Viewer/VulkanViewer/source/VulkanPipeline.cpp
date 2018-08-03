@@ -166,7 +166,7 @@ bool VulkanPipeline::CreatePipeline(VulkanDrawable* drawableObj, VkPipeline* pip
 	pipelineInfo.pDynamicState			= &dynamicState;
 	pipelineInfo.pViewportState			= &viewportStateInfo;
 	pipelineInfo.pDepthStencilState		= &depthStencilStateInfo;
-	pipelineInfo.pStages				= shaderObj->shaderStages;
+	pipelineInfo.pStages				= shaderObj->_shaderStages;
 	pipelineInfo.stageCount				= 2;
 	pipelineInfo.renderPass				= _appObj->_rendererObj->_renderPass;
 	pipelineInfo.subpass				= 0;

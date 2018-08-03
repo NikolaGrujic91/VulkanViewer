@@ -180,7 +180,7 @@ void VulkanApplication::DeInitialize()
 		drawableObj->DestroyDescriptor();
 	}
 
-	_rendererObj->GetShader()->destroyShaders();
+	_rendererObj->GetShader()->DestroyShaders();
 	_rendererObj->DestroyFramebuffers();
 	_rendererObj->DestroyRenderpass();
 	_rendererObj->DestroyDrawableVertexBuffer();
