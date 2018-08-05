@@ -1,10 +1,8 @@
 #pragma once
 
 #include "Headers.h"
-class VulkanInstance;
 class VulkanDevice;
-class VulkanRenderer;
-class VulkanApplication;
+
 /*
 * Keep each of our swap chain buffers' image, command buffer and view in one spot
 */
@@ -68,10 +66,16 @@ struct SwapChainPublicVariables
 
 class VulkanSwapChain
 {
-
-// Public member function
 public:
-	VulkanSwapChain(VulkanRenderer* renderer);
+	VulkanSwapChain(VkInstance* instance,
+		            VkDevice* device,
+	                VulkanDevice* deviceObj,
+	                VkPhysicalDevice* gpu,
+	                HINSTANCE* connection,
+	                HWND* window,
+	                int* width,
+	                int* height,
+		            bool* isResizing);
 	~VulkanSwapChain();
 	void IntializeSwapChain();
 	void CreateSwapChain(const VkCommandBuffer& cmd);
@@ -108,6 +112,14 @@ private:
 	// User define structure containing private variables used 
 	// by the swap chain private and public functions.
 	SwapChainPrivateVariables	_scPrivateVars;
-	VulkanRenderer*				_rendererObj;	// parent
-	VulkanApplication*			_appObj;
+
+	VkInstance*       _instance;
+	VkDevice*         _device;
+	VulkanDevice*     _deviceObj;
+	VkPhysicalDevice* _gpu;
+	HINSTANCE*        _connection;
+	HWND*             _window;
+	int*              _width;
+	int*              _height;
+	bool*             _isResizing;
 };

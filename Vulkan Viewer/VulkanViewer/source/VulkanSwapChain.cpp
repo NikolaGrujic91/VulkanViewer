@@ -1,9 +1,5 @@
 #include "VulkanSwapChain.h"
-
 #include "VulkanDevice.h"
-#include "VulkanInstance.h"
-#include "VulkanRenderer.h"
-#include "VulkanApplication.h"
 
 #define INSTANCE_FUNC_PTR(instance, entrypoint){											\
     fp##entrypoint = (PFN_vk##entrypoint) vkGetInstanceProcAddr(instance, "vk"#entrypoint); \
@@ -21,10 +17,25 @@
     }																						\
 }
 
-VulkanSwapChain::VulkanSwapChain(VulkanRenderer* renderer)
+VulkanSwapChain::VulkanSwapChain(VkInstance* instance,
+	                             VkDevice* device,
+	                             VulkanDevice* deviceObj,
+	                             VkPhysicalDevice* gpu,
+	                             HINSTANCE* connection,
+	                             HWND* window,
+	                             int* width,
+	                             int* height,
+	                             bool* isResizing) :
+	_instance(instance),
+	_device(device),
+	_deviceObj(deviceObj),
+	_gpu(gpu),
+	_connection(connection),
+	_window(window),
+	_width(width),
+	_height(height),
+	_isResizing(isResizing)
 {
-	_rendererObj = renderer;
-	_appObj		= VulkanApplication::GetInstance();
 	_scPublicVars._swapChain = VK_NULL_HANDLE;
 }
 
@@ -37,23 +48,19 @@ VulkanSwapChain::~VulkanSwapChain()
 
 VkResult VulkanSwapChain::CreateSwapChainExtensions()
 {
-	// Dependency on createPresentationWindow()
-	VkInstance& instance	= _appObj->_instanceObj._instance;
-	VkDevice& device		= _appObj->_deviceObj->_device;
-
 	// Get Instance based swap chain extension function pointer
-	INSTANCE_FUNC_PTR(instance, GetPhysicalDeviceSurfaceSupportKHR);
-	INSTANCE_FUNC_PTR(instance, GetPhysicalDeviceSurfaceCapabilitiesKHR);
-	INSTANCE_FUNC_PTR(instance, GetPhysicalDeviceSurfaceFormatsKHR);
-	INSTANCE_FUNC_PTR(instance, GetPhysicalDeviceSurfacePresentModesKHR);
-	INSTANCE_FUNC_PTR(instance, DestroySurfaceKHR);
+	INSTANCE_FUNC_PTR(*_instance, GetPhysicalDeviceSurfaceSupportKHR);
+	INSTANCE_FUNC_PTR(*_instance, GetPhysicalDeviceSurfaceCapabilitiesKHR);
+	INSTANCE_FUNC_PTR(*_instance, GetPhysicalDeviceSurfaceFormatsKHR);
+	INSTANCE_FUNC_PTR(*_instance, GetPhysicalDeviceSurfacePresentModesKHR);
+	INSTANCE_FUNC_PTR(*_instance, DestroySurfaceKHR);
 
 	// Get Device based swap chain extension function pointer
-	DEVICE_FUNC_PTR(device, CreateSwapchainKHR);
-	DEVICE_FUNC_PTR(device, DestroySwapchainKHR);
-	DEVICE_FUNC_PTR(device, GetSwapchainImagesKHR);
-	DEVICE_FUNC_PTR(device, AcquireNextImageKHR);
-	DEVICE_FUNC_PTR(device, QueuePresentKHR);
+	DEVICE_FUNC_PTR(*_device, CreateSwapchainKHR);
+	DEVICE_FUNC_PTR(*_device, DestroySwapchainKHR);
+	DEVICE_FUNC_PTR(*_device, GetSwapchainImagesKHR);
+	DEVICE_FUNC_PTR(*_device, AcquireNextImageKHR);
+	DEVICE_FUNC_PTR(*_device, QueuePresentKHR);
 
 	return VK_SUCCESS;
 }
@@ -61,18 +68,16 @@ VkResult VulkanSwapChain::CreateSwapChainExtensions()
 VkResult VulkanSwapChain::CreateSurface()
 {
 	VkResult  result;
-	// Depends on createPresentationWindow(), need an empty window handle
-	VkInstance& instance = _appObj->_instanceObj._instance;
 
 	// Construct the surface description:
 #ifdef _WIN32
 	VkWin32SurfaceCreateInfoKHR createInfo = {};
 	createInfo.sType		= VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 	createInfo.pNext		= nullptr;
-	createInfo.hinstance	= _rendererObj->_connection;
-	createInfo.hwnd			= _rendererObj->_window;
+	createInfo.hinstance	= *_connection;
+	createInfo.hwnd			= *_window;
 
-	result = vkCreateWin32SurfaceKHR(instance, &createInfo, nullptr, &_scPublicVars._surface);
+	result = vkCreateWin32SurfaceKHR(*_instance, &createInfo, nullptr, &_scPublicVars._surface);
 
 #else  // _WIN32
 
@@ -91,16 +96,14 @@ VkResult VulkanSwapChain::CreateSurface()
 
 uint32_t VulkanSwapChain::GetGraphicsQueueWithPresentationSupport()
 {
-	VulkanDevice* device	   = _appObj->_deviceObj;
-    const uint32_t queueCount  = device->_queueFamilyCount;
-    VkPhysicalDevice gpu = *device->_gpu;
-	std::vector<VkQueueFamilyProperties>& queueProps = device->_queueFamilyProps;
+    const uint32_t queueCount  = _deviceObj->_queueFamilyCount;
+	std::vector<VkQueueFamilyProperties>& queueProps = _deviceObj->_queueFamilyProps;
 
 	// Iterate over each queue and get presentation status for each.
     auto* supportsPresent = static_cast<VkBool32 *>(malloc(queueCount * sizeof(VkBool32)));
 	for (uint32_t i = 0; i < queueCount; i++) 
     {
-		fpGetPhysicalDeviceSurfaceSupportKHR(gpu, i, _scPublicVars._surface, &supportsPresent[i]);
+		fpGetPhysicalDeviceSurfaceSupportKHR(*_gpu, i, _scPublicVars._surface, &supportsPresent[i]);
 	}
 
 	 // Search for a graphics queue and a present queue in the array of queue
@@ -152,7 +155,7 @@ uint32_t VulkanSwapChain::GetGraphicsQueueWithPresentationSupport()
 
 void VulkanSwapChain::GetSupportedFormats()
 {
-    const VkPhysicalDevice gpu = *_rendererObj->GetDevice()->_gpu;
+    const VkPhysicalDevice gpu = *_gpu;
 
     // Get the list of VkFormats that are supported:
 	uint32_t formatCount;
@@ -193,7 +196,7 @@ void VulkanSwapChain::IntializeSwapChain()
 		std::cout << "Could not find a graphics and a present queue\nCould not find a graphics and a present queue\n";
 		exit(-1);
 	}
-	_rendererObj->GetDevice()->_graphicsQueueWithPresentIndex = index;
+	_deviceObj->_graphicsQueueWithPresentIndex = index;
 
 	// Get the list of formats that are supported
 	GetSupportedFormats();
@@ -216,7 +219,7 @@ void VulkanSwapChain::CreateSwapChain(const VkCommandBuffer& cmd)
 
 void VulkanSwapChain::GetSurfaceCapabilitiesAndPresentMode()
 {
-    const VkPhysicalDevice gpu = *_appObj->_deviceObj->_gpu;
+    const VkPhysicalDevice gpu = *_gpu;
 	VkResult result = fpGetPhysicalDeviceSurfaceCapabilitiesKHR(gpu, _scPublicVars._surface, &_scPrivateVars._surfCapabilities);
 	assert(result == VK_SUCCESS);
 
@@ -233,8 +236,8 @@ void VulkanSwapChain::GetSurfaceCapabilitiesAndPresentMode()
 	if (_scPrivateVars._surfCapabilities.currentExtent.width == static_cast<uint32_t>(-1))
 	{
 		// If the surface width and height is not defined, the set the equal to image size.
-		_scPrivateVars._swapChainExtent.width = _rendererObj->_width;
-		_scPrivateVars._swapChainExtent.height = _rendererObj->_height;
+		_scPrivateVars._swapChainExtent.width = *_width;
+		_scPrivateVars._swapChainExtent.height = *_height;
 	}
 	else
 	{
@@ -309,11 +312,11 @@ void VulkanSwapChain::CreateSwapChainColorImages()
 	swapChainInfo.queueFamilyIndexCount = 0;
 	swapChainInfo.pQueueFamilyIndices	= nullptr;
 
-	VkResult result = fpCreateSwapchainKHR(_rendererObj->GetDevice()->_device, &swapChainInfo, nullptr, &_scPublicVars._swapChain);
+	VkResult result = fpCreateSwapchainKHR(*_device, &swapChainInfo, nullptr, &_scPublicVars._swapChain);
 	assert(result == VK_SUCCESS);
 
 	// Create the swapchain object
-	result = fpGetSwapchainImagesKHR(_rendererObj->GetDevice()->_device, _scPublicVars._swapChain, &_scPublicVars._swapchainImageCount, nullptr);
+	result = fpGetSwapchainImagesKHR(*_device, _scPublicVars._swapChain, &_scPublicVars._swapchainImageCount, nullptr);
 	assert(result == VK_SUCCESS);
 
 	_scPrivateVars._swapchainImages.clear();
@@ -322,12 +325,12 @@ void VulkanSwapChain::CreateSwapChainColorImages()
 	assert(!_scPrivateVars._swapchainImages.empty());
 
 	// Retrieve the swapchain image surfaces 
-	result = fpGetSwapchainImagesKHR(_rendererObj->GetDevice()->_device, _scPublicVars._swapChain, &_scPublicVars._swapchainImageCount, &_scPrivateVars._swapchainImages[0]);
+	result = fpGetSwapchainImagesKHR(*_device, _scPublicVars._swapChain, &_scPublicVars._swapchainImageCount, &_scPrivateVars._swapchainImages[0]);
 	assert(result == VK_SUCCESS);
 
 	if (oldSwapchain != VK_NULL_HANDLE) 
     {
-		fpDestroySwapchainKHR(_rendererObj->GetDevice()->_device, oldSwapchain, nullptr);
+		fpDestroySwapchainKHR(*_device, oldSwapchain, nullptr);
 	}
 }
 
@@ -359,7 +362,7 @@ void VulkanSwapChain::CreateColorImageView(const VkCommandBuffer& cmd)
 
 		imgViewInfo.image = sc_buffer._image;
 
-        const VkResult result = vkCreateImageView(_rendererObj->GetDevice()->_device, &imgViewInfo, nullptr, &sc_buffer._view);
+        const VkResult result = vkCreateImageView(*_device, &imgViewInfo, nullptr, &sc_buffer._view);
 		_scPublicVars._colorBuffer.push_back(sc_buffer);
 		assert(result == VK_SUCCESS);
 	}
@@ -368,19 +371,17 @@ void VulkanSwapChain::CreateColorImageView(const VkCommandBuffer& cmd)
 
 void VulkanSwapChain::DestroySwapChain()
 {
-	VulkanDevice* deviceObj = _appObj->_deviceObj;
-
 	for (uint32_t i = 0; i < _scPublicVars._swapchainImageCount; i++) 
     {
-		vkDestroyImageView(deviceObj->_device, _scPublicVars._colorBuffer[i]._view, nullptr);
+		vkDestroyImageView(*_device, _scPublicVars._colorBuffer[i]._view, nullptr);
 	}
 	
-	if (!_appObj->_isResizing) 
+	if (!*_isResizing) 
     {
 		// This piece code will only executes at application shutdown.
         // During resize the old swapchain image is delete in createSwapChainColorImages()
-		fpDestroySwapchainKHR(deviceObj->_device, _scPublicVars._swapChain, nullptr);
-		vkDestroySurfaceKHR(_appObj->_instanceObj._instance, _scPublicVars._surface, nullptr);
+		fpDestroySwapchainKHR(*_device, _scPublicVars._swapChain, nullptr);
+		vkDestroySurfaceKHR(*_instance, _scPublicVars._surface, nullptr);
 	}
 }
 
