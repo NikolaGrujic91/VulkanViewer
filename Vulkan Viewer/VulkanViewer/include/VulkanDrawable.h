@@ -2,13 +2,21 @@
 #include "Headers.h"
 #include "VulkanDescriptor.h"
 #include "Wrappers.h"
+#include "VulkanSwapChain.h"
 
 class VulkanRenderer;
 
 class VulkanDrawable : public VulkanDescriptor
 {
 public:
-	VulkanDrawable(VulkanRenderer* parent = nullptr);
+	VulkanDrawable(VkDevice* device,
+	               VkCommandPool* commandPool,
+	               VkRenderPass* renderPass,
+	               VkQueue* queue,
+	               std::vector<VkDescriptorSetLayout>* framebuffers,
+	               VulkanSwapChain* swapChainObj,
+	               int* width,
+	               int* height);
 	~VulkanDrawable();
 
 	void CreateVertexBuffer(const void *vertexData, uint32_t dataSize, uint32_t dataStride, bool useTexture);
@@ -26,9 +34,6 @@ public:
 	void CreateDescriptorSetLayout(bool useTexture) override;
 	void CreatePipelineLayout() override;
 
-	void InitViewports(VkCommandBuffer* cmd);
-	void InitScissors(VkCommandBuffer* cmd);
-
 	void DestroyVertexBuffer();
 	void DestroyCommandBuffer();
 	void DestroySynchronizationObjects();
@@ -36,7 +41,17 @@ public:
 
 	void SetTextures(TextureData* tex);
 
-	struct 
+	// Stores the vertex input rate
+	VkVertexInputBindingDescription		_viIpBind;
+	// Store metadata helpful in data interpretation
+	VkVertexInputAttributeDescription	_viIpAttrb[2];
+
+private:
+	void InitViewports(VkCommandBuffer* cmd);
+	void InitScissors(VkCommandBuffer* cmd);
+	void RecordCommandBuffer(int currentImage, VkCommandBuffer* cmdDraw);
+
+	struct
 	{
 		VkBuffer						_buffer;			// Buffer resource object
 		VkDeviceMemory					_memory;			// Buffer resourece object's allocated device memory
@@ -47,20 +62,12 @@ public:
 	} _uniformData;
 
 	// Structure storing vertex buffer metadata
-	struct 
+	struct
 	{
 		VkBuffer               _buf;
 		VkDeviceMemory         _mem;
 		VkDescriptorBufferInfo _bufferInfo;
 	} _vertexBuffer;
-
-	// Stores the vertex input rate
-	VkVertexInputBindingDescription		_viIpBind;
-	// Store metadata helpful in data interpretation
-	VkVertexInputAttributeDescription	_viIpAttrb[2];
-
-private:	
-	void RecordCommandBuffer(int currentImage, VkCommandBuffer* cmdDraw);
 
 	std::vector<VkCommandBuffer> _vecCmdDraw;			// Command buffer for drawing
 	VkViewport                   _viewport;
@@ -74,6 +81,13 @@ private:
 	glm::mat4                    _modelMatrix;
 	glm::mat4                    _mvpMatrix;
 
-	VulkanRenderer*              _rendererObj;
-	VkPipeline*		             _pipeline;
+	VkPipeline*		                    _pipeline;
+	VkDevice*                           _device;
+	VkCommandPool*                      _commandPool;
+	VkRenderPass*                       _renderPass;
+	VkQueue*                            _queue;
+	std::vector<VkDescriptorSetLayout>* _framebuffers;
+	VulkanSwapChain*                    _swapChainObj;
+	int*                                _width;
+	int*                                _height;
 };
